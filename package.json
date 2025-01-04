@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "typescript": "5.0.4",
+    "ts-node": "10.9.1"
+  },
+  "dependencies": {
+    "typeorm": "0.3.17",
+    "@types/node": "^20.0.0",
+    "reflect-metadata": "^0.1.13",
+    "pg": "^8.11.0"
+  }
+}
