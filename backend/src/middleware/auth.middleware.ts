@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
+
+
 // Define a proper interface for the authenticated request
 export interface AuthRequest extends Request {
     user?: {

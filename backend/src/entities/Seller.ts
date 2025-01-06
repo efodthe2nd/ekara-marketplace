@@ -13,7 +13,10 @@ export class Seller extends User {
     @Column()
     website: string;
 
-    @OneToMany(() => Product, product => product.seller)
+    @OneToMany(() => Product, product => product.seller, {
+        cascade: true,  // Optional: allows cascading operations
+        eager: false 
+    })
     products: Product[];
 
     @Column({ default: 0 })

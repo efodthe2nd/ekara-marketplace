@@ -11,7 +11,6 @@ export class UserController {
             const createUserDto: CreateUserDto = req.body;
             const user = await this.userService.createUser(createUserDto);
             const token = this.userService.generateToken(user);
-
             res.status(201).json({
                 message: 'User registered successfully',
                 user,
@@ -29,7 +28,6 @@ export class UserController {
             const loginUserDto: LoginUserDto = req.body;
             const user = await this.userService.validateUser(loginUserDto);
             const token = this.userService.generateToken(user);
-
             res.json({
                 message: 'Login successful',
                 user,
@@ -44,9 +42,14 @@ export class UserController {
 
     getProfile = async (req: AuthRequest, res: Response) => {
         try {
+            if (!req.user) {
+                return res.status(401).json({
+                    message: 'User not found in request'
+                });
+            }
             const userId = req.user.id;
             const user = await this.userService.getUserById(userId);
-            
+           
             res.json({
                 user
             });
@@ -59,10 +62,14 @@ export class UserController {
 
     updateProfile = async (req: AuthRequest, res: Response) => {
         try {
+            if (!req.user) {
+                return res.status(401).json({
+                    message: 'User not found in request'
+                });
+            }
             const userId = req.user.id;
-            const updateUserDto: UpdateUserDto = req.body as UpdateUserDto
+            const updateUserDto: UpdateUserDto = req.body as UpdateUserDto;
             const updatedUser = await this.userService.updateUser(userId, updateUserDto);
-
             res.json({
                 message: 'Profile updated successfully',
                 user: updatedUser

@@ -3,7 +3,8 @@ import express from 'express';
 import { DataSource } from 'typeorm';
 import { AppRouter } from './routes';
 import { UserService } from './services/UserService';
-import { User, Buyer, Seller } from './entities/Index';
+import * as Entities from './entities';  // Import all entities
+import dotenv from 'dotenv';
 
 const app = express();
 
@@ -19,9 +20,9 @@ const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME || "postgres",
     password: process.env.DB_PASSWORD || "postgres",
     database: process.env.DB_NAME || "marketplace",
-    entities: [User, Buyer, Seller],
-    synchronize: process.env.NODE_ENV !== 'production', // Don't use in production!
-    logging: process.env.NODE_ENV !== 'production'
+    entities: Object.values(Entities),  // Use all imported entities
+    synchronize: true,  // Explicitly set to true for development
+    logging: true
 });
 
 // Initialize the application
@@ -33,9 +34,9 @@ async function initializeApp() {
 
         // Initialize services
         const userService = new UserService(
-            AppDataSource.getRepository(User),
-            AppDataSource.getRepository(Buyer),
-            AppDataSource.getRepository(Seller)
+            AppDataSource.getRepository(Entities.User),
+            AppDataSource.getRepository(Entities.Buyer),
+            AppDataSource.getRepository(Entities.Seller)
         );
 
         // Initialize routes
@@ -53,8 +54,13 @@ async function initializeApp() {
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
-    } catch (error) {
-        console.error("Error during initialization:", error);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("Error during initialization:", error.message);
+            console.error("Detailed error:", error.stack);
+        } else {
+            console.error("An unknown error occurred:", error);
+        }
         process.exit(1);
     }
 }

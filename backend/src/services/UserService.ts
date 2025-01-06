@@ -2,7 +2,7 @@
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { User, Buyer, Seller } from '../entities/Index';
+import { User, Buyer, Seller } from '../entities';
 import { CreateUserDto, LoginUserDto, UpdateUserDto } from '../dto/user';
 
 export class UserService {
