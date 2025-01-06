@@ -3,17 +3,20 @@ import express from 'express';
 import { DataSource } from 'typeorm';
 import { AppRouter } from './routes';
 import { UserService } from './services/UserService';
-import * as Entities from './entities';  // Import all entities
+import * as Entities from './entities';
 import { UserController } from './controllers/UserController';
+import { ProductService } from './services/ProductService';
+import { ProductController } from './controllers/ProductController';
+import { productRepositoryMethods } from './entities/product.repository';
+import { Repository } from 'typeorm';
+import { ProductRepositoryCustom } from './entities/product.repository';
 import dotenv from 'dotenv';
 
 const app = express();
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection
 const AppDataSource = new DataSource({
     type: "postgres",
     host: process.env.DB_HOST || "localhost",
@@ -21,15 +24,13 @@ const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME || "postgres",
     password: process.env.DB_PASSWORD || "postgres",
     database: process.env.DB_NAME || "marketplace",
-    entities: Object.values(Entities),  // Use all imported entities
-    synchronize: true,  // Explicitly set to true for development
+    entities: Object.values(Entities),
+    synchronize: true,
     logging: true
 });
 
-// Initialize the application
 async function initializeApp() {
     try {
-        // Initialize database connection
         await AppDataSource.initialize();
         console.log("Data Source has been initialized!");
 
@@ -39,13 +40,19 @@ async function initializeApp() {
             AppDataSource.getRepository(Entities.BuyerProfile),
             AppDataSource.getRepository(Entities.SellerProfile)
         );
+        const productService = new ProductService(
+            Object.assign(
+                AppDataSource.getRepository(Entities.Product),
+                productRepositoryMethods
+            ) as Repository<Entities.Product> & ProductRepositoryCustom
+        );
 
-
-        // Initialize controller
+        // Initialize controllers
         const userController = new UserController(userService);
+        const productController = new ProductController(productService);
 
         // Initialize routes
-        const appRouter = AppRouter(userController);
+        const appRouter = AppRouter(userController, productController);
         app.use('/api', appRouter);
 
         // Error handling middleware
@@ -54,7 +61,6 @@ async function initializeApp() {
             res.status(500).json({ message: 'Something went wrong!' });
         });
 
-        // Start the server
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
