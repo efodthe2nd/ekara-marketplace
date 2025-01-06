@@ -1,13 +1,13 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Buyer } from './Buyer';
+import { BuyerProfile } from './Buyer';
 
 @Entity('orders')
 export class Order {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Buyer, buyer => buyer.purchaseHistory)
-    buyer: Buyer;
+    @ManyToOne(() => BuyerProfile, buyer => buyer.purchaseHistory)
+    buyer: BuyerProfile;
 
     @Column('simple-array')
     products: number[];

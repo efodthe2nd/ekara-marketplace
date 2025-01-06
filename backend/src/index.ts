@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { AppRouter } from './routes';
 import { UserService } from './services/UserService';
 import * as Entities from './entities';  // Import all entities
+import { UserController } from './controllers/UserController';
 import dotenv from 'dotenv';
 
 const app = express();
@@ -35,13 +36,17 @@ async function initializeApp() {
         // Initialize services
         const userService = new UserService(
             AppDataSource.getRepository(Entities.User),
-            AppDataSource.getRepository(Entities.Buyer),
-            AppDataSource.getRepository(Entities.Seller)
+            AppDataSource.getRepository(Entities.BuyerProfile),
+            AppDataSource.getRepository(Entities.SellerProfile)
         );
 
+
+        // Initialize controller
+        const userController = new UserController(userService);
+
         // Initialize routes
-        const appRouter = new AppRouter(userService);
-        app.use('/api', appRouter.getRouter());
+        const appRouter = AppRouter(userController);
+        app.use('/api', appRouter);
 
         // Error handling middleware
         app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

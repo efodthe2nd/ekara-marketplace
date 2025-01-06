@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Seller } from './Seller';
+import { SellerProfile } from './SellerProfile';
 
 @Entity('products')
 export class Product {
@@ -21,8 +21,8 @@ export class Product {
     @Column('simple-array')
     images: string[];
 
-    @ManyToOne(() => Seller, seller => seller.products)
-    seller: Seller;
+    @ManyToOne(() => SellerProfile, seller => seller.products)
+    seller: SellerProfile;
 
     @Column()
     category: string;

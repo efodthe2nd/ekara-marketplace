@@ -1,10 +1,16 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { Order } from './Order';
-import { Product } from './Product';
 
-@Entity('buyers')
-export class Buyer extends User {
+@Entity('buyer_profiles')
+export class BuyerProfile {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @OneToOne(() => User, (user) => user.buyerProfile)
+    @JoinColumn()
+    user: User;
+
     @Column()
     firstName: string;
 
@@ -14,9 +20,9 @@ export class Buyer extends User {
     @Column()
     address: string;
 
-    @OneToMany(() => Order, order => order.buyer)
+    @OneToMany(() => Order, (order) => order.buyer)
     purchaseHistory: Order[];
 
-    @OneToMany(() => Product, product => product.id)
+    @Column('simple-array', { nullable: true })
     wishlist: number[];
 }

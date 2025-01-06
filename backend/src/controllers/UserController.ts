@@ -11,9 +11,13 @@ export class UserController {
             const createUserDto: CreateUserDto = req.body;
             const user = await this.userService.createUser(createUserDto);
             const token = this.userService.generateToken(user);
+            
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
+
             res.status(201).json({
                 message: 'User registered successfully',
-                user,
+                user: userWithoutPassword,
                 token
             });
         } catch (error: any) {
@@ -28,9 +32,13 @@ export class UserController {
             const loginUserDto: LoginUserDto = req.body;
             const user = await this.userService.validateUser(loginUserDto);
             const token = this.userService.generateToken(user);
+
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
+
             res.json({
                 message: 'Login successful',
-                user,
+                user: userWithoutPassword,
                 token
             });
         } catch (error: any) {
@@ -49,9 +57,12 @@ export class UserController {
             }
             const userId = req.user.id;
             const user = await this.userService.getUserById(userId);
+            
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
            
             res.json({
-                user
+                user: userWithoutPassword
             });
         } catch (error: any) {
             res.status(404).json({
@@ -68,11 +79,15 @@ export class UserController {
                 });
             }
             const userId = req.user.id;
-            const updateUserDto: UpdateUserDto = req.body as UpdateUserDto;
+            const updateUserDto: UpdateUserDto = req.body;
             const updatedUser = await this.userService.updateUser(userId, updateUserDto);
+            
+            // Remove password from response
+            const { password, ...userWithoutPassword } = updatedUser;
+
             res.json({
                 message: 'Profile updated successfully',
-                user: updatedUser
+                user: userWithoutPassword
             });
         } catch (error: any) {
             res.status(400).json({
@@ -83,12 +98,80 @@ export class UserController {
 
     getAllUsers = async (req: AuthRequest, res: Response) => {
         try {
-            // Only admin should access this route (add role middleware)
             const users = await this.userService.getAllUsers();
-            res.json({ users });
+            
+            // Remove passwords from response
+            const usersWithoutPasswords = users.map(user => {
+                const { password, ...userWithoutPassword } = user;
+                return userWithoutPassword;
+            });
+
+            res.json({ 
+                users: usersWithoutPasswords 
+            });
         } catch (error: any) {
             res.status(500).json({
                 message: error.message || 'Error fetching users'
+            });
+        }
+    };
+
+    // New endpoints for role management
+    addRole = async (req: AuthRequest, res: Response) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({
+                    message: 'User not found in request'
+                });
+            }
+
+            const userId = req.user.id;
+            const { role } = req.body;
+
+            if (!role || !['buyer', 'seller'].includes(role)) {
+                return res.status(400).json({
+                    message: 'Invalid role specified'
+                });
+            }
+
+            const updatedUser = await this.userService.updateUserRole(userId, role);
+            
+            // Remove password from response
+            const { password, ...userWithoutPassword } = updatedUser;
+
+            res.json({
+                message: `Successfully added ${role} role`,
+                user: userWithoutPassword
+            });
+        } catch (error: any) {
+            res.status(400).json({
+                message: error.message || `Error adding role`
+            });
+        }
+    };
+
+    getUserRoles = async (req: AuthRequest, res: Response) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({
+                    message: 'User not found in request'
+                });
+            }
+
+            const userId = req.user.id;
+            const user = await this.userService.getUserById(userId);
+
+            res.json({
+                roles: {
+                    isBuyer: user.isBuyer,
+                    isSeller: user.isSeller
+                },
+                buyerProfile: user.buyerProfile,
+                sellerProfile: user.sellerProfile
+            });
+        } catch (error: any) {
+            res.status(404).json({
+                message: error.message || 'Error fetching user roles'
             });
         }
     };

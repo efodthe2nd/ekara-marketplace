@@ -1,24 +1,9 @@
 import { Router } from 'express';
-import { UserRoutes } from './user.routes';
-import { UserService } from '../services/UserService';
+import { userRouter } from './user.routes';
+import { UserController } from '../controllers/UserController';
 
-export class AppRouter {
-    private router: Router;
-    private userService: UserService;
-
-    constructor(userService: UserService) {
-        this.router = Router();
-        this.userService = userService;
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes(): void {
-        // Mount user routes at /api/auth/*
-        const userRoutes = new UserRoutes(this.userService);
-        this.router.use('/auth', userRoutes.getRouter());
-    }
-
-    getRouter(): Router {
-        return this.router;
-    }
-}
+export const AppRouter = (userController: UserController): Router => {
+    const router = Router();
+    router.use('/auth', userRouter(userController));
+    return router;
+};

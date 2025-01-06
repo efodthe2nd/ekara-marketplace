@@ -1,17 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Buyer } from './Buyer';
-import { Seller } from './Seller';
+import { BuyerProfile } from './Buyer';
+import { SellerProfile } from './SellerProfile';
 
 @Entity('reviews')
 export class Review {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Buyer)
-    buyer: Buyer;
+    @ManyToOne(() => BuyerProfile)
+    buyer: BuyerProfile;
 
-    @ManyToOne(() => Seller)
-    seller: Seller;
+    @ManyToOne(() => SellerProfile)
+    seller: SellerProfile;
 
     @Column()
     rating: number;

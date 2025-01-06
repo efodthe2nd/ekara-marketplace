@@ -1,18 +1,16 @@
+// src/middleware/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
-
-
-// Define a proper interface for the authenticated request
 export interface AuthRequest extends Request {
     user?: {
         id: number;
         email: string;
-        role: string;
+        isBuyer: boolean;
+        isSeller: boolean;
     };
 }
 
-// Fix the middleware type declaration
 export const authMiddleware = (
     req: Request,
     res: Response,
@@ -28,7 +26,10 @@ export const authMiddleware = (
     const token = authHeader.split(' ')[1]; // Bearer <token>
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(
+            token, 
+            process.env.JWT_SECRET || 'your-secret-key'
+        );
         (req as AuthRequest).user = decoded as any;
         next();
     } catch (error) {
@@ -37,7 +38,8 @@ export const authMiddleware = (
     }
 };
 
-export const roleMiddleware = (roles: string[]) => {
+// Middleware for checking specific roles
+export const requireRole = (role: 'buyer' | 'seller') => {
     return (req: Request, res: Response, next: NextFunction): void => {
         const authReq = req as AuthRequest;
         if (!authReq.user) {
@@ -45,8 +47,36 @@ export const roleMiddleware = (roles: string[]) => {
             return;
         }
 
-        if (!roles.includes(authReq.user.role)) {
-            res.status(403).json({ message: 'Forbidden' });
+        const hasRole = role === 'buyer' ? authReq.user.isBuyer : authReq.user.isSeller;
+        
+        if (!hasRole) {
+            res.status(403).json({ 
+                message: `This action requires ${role} privileges` 
+            });
+            return;
+        }
+
+        next();
+    };
+};
+
+// Middleware for checking multiple roles
+export const requireAnyRole = (roles: ('buyer' | 'seller')[]) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+        const authReq = req as AuthRequest;
+        if (!authReq.user) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+
+        const hasRequiredRole = roles.some(role => 
+            role === 'buyer' ? authReq.user!.isBuyer : authReq.user!.isSeller
+        );
+        
+        if (!hasRequiredRole) {
+            res.status(403).json({ 
+                message: `This action requires one of these roles: ${roles.join(', ')}` 
+            });
             return;
         }
 

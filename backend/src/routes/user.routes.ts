@@ -1,58 +1,37 @@
-import { Router, Request, Response, NextFunction } from 'express';
+// src/routes/user.routes.ts
+import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
-import { UserService } from '../services/UserService';
-import { authMiddleware, roleMiddleware, AuthRequest } from '../middleware/auth.middleware';
+import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { RequestHandler } from 'express';
 
-export class UserRoutes {
-    private router: Router;
-    private userController: UserController;
+export const userRouter = (userController: UserController): Router => {
+    const router = Router();
 
-    constructor(userService: UserService) {
-        this.router = Router();
-        this.userController = new UserController(userService);
-        this.initializeRoutes();
-    }
+    // Public routes (these work fine)
+    router.post('/register', userController.register);
+    router.post('/login', userController.login);
 
-    private initializeRoutes(): void {
-        // Public routes
-        this.router.post('/register',
-            async (req: Request, res: Response) => {
-                await this.userController.register(req, res);
-            }
-        );
+    // Protected routes - using RequestHandler type casting
+    router.get('/profile', authMiddleware, userController.getProfile as RequestHandler);
+    router.put('/profile', authMiddleware, userController.updateProfile as RequestHandler);
+    router.get('/roles', authMiddleware, userController.getUserRoles as RequestHandler);
+    router.post('/roles', authMiddleware, userController.addRole as RequestHandler);
 
-        this.router.post('/login',
-            async (req: Request, res: Response) => {
-                await this.userController.login(req, res);
-            }
-        );
+    // Role-specific routes
+    router.get('/buyer-dashboard', 
+        authMiddleware,
+        requireRole('buyer'),
+        userController.getProfile as RequestHandler
+    );
 
-        // Protected routes
-        this.router.get('/profile',
-            authMiddleware,
-            async (req: AuthRequest, res: Response) => {
-                await this.userController.getProfile(req, res);
-            }
-        );
+    router.get('/seller-dashboard', 
+        authMiddleware,
+        requireRole('seller'),
+        userController.getProfile as RequestHandler
+    );
 
-        this.router.put('/profile',
-            authMiddleware,
-            async (req: AuthRequest, res: Response) => {
-                await this.userController.updateProfile(req, res);
-            }
-        );
+    // Admin routes
+    router.get('/users', authMiddleware, userController.getAllUsers as RequestHandler);
 
-        // Admin routes
-        this.router.get('/users',
-            authMiddleware,
-            roleMiddleware(['admin']),
-            async (req: AuthRequest, res: Response) => {
-                await this.userController.getAllUsers(req, res);
-            }
-        );
-    }
-
-    getRouter(): Router {
-        return this.router;
-    }
-}
+    return router;
+};

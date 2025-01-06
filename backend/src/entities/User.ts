@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+import { BuyerProfile } from './Buyer';
+import { SellerProfile } from './SellerProfile';
 
 @Entity('users')
 export class User {
@@ -14,12 +16,21 @@ export class User {
     @Column()
     password: string;
 
-    @Column()
-    role: string;
+    @Column('boolean', { default: false })
+    isBuyer: boolean;
+
+    @Column('boolean', { default: false })
+    isSeller: boolean;
 
     @CreateDateColumn()
     createdAt: Date;
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @OneToOne(() => BuyerProfile, (buyerProfile) => buyerProfile.user)
+    buyerProfile: BuyerProfile;
+
+    @OneToOne(() => SellerProfile, (sellerProfile) => sellerProfile.user)
+    sellerProfile: SellerProfile;
 }
