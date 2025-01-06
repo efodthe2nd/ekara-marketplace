@@ -1,3 +1,4 @@
+// src/entities/SellerProfile.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { Product } from './Product';
@@ -11,13 +12,13 @@ export class SellerProfile {
     @JoinColumn()
     user: User;
 
-    @Column()
+    @Column({ nullable: true })  // Made optional
     companyName: string;
 
-    @Column()
+    @Column({ nullable: true })  // Made optional
     companyDescription: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true })  // Already optional
     website: string;
 
     @OneToMany(() => Product, (product) => product.seller)
