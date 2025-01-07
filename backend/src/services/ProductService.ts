@@ -1,24 +1,33 @@
 import { Repository } from 'typeorm';
 import { Product } from '../entities/Product';
+import { SellerProfile } from '../entities/SellerProfile';
 import { CreateProductDto } from '../dto/user/CreateProductDto';
 import { UpdateProductDto } from '../dto/user/UpdateProductDto';
 import { productRepositoryMethods } from '../entities/product.repository';
 
-interface ProductRepositoryCustom extends Repository<Product> {
+export interface ProductRepositoryCustom extends Repository<Product> {
   searchProducts(query: string): Promise<Product[]>;
 }
 
 export class ProductService {
-  constructor(private productRepository: Repository<Product> & ProductRepositoryCustom) {
+  constructor(
+    private productRepository: Repository<Product> & ProductRepositoryCustom,
+    private sellerRepository: Repository<SellerProfile>
+  ) {
     Object.assign(this.productRepository, productRepositoryMethods);
   }
 
   async createProduct(createProductDto: CreateProductDto, sellerId: number): Promise<Product> {
     this.validateProductInput(createProductDto);
 
+    const seller = await this.sellerRepository.findOneBy({ id: sellerId });
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
+
     const newProduct = this.productRepository.create({
       ...createProductDto,
-      seller: { id: sellerId },
+      seller,
       createdAt: new Date(),
       updatedAt: new Date()
     });

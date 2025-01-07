@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
-import { CreateUserDto, LoginUserDto, UpdateUserDto } from '../dto/user/index';
+import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user/index';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export class UserController {
@@ -27,6 +27,23 @@ export class UserController {
         }
     };
 
+    createSellerProfile = async (req: AuthRequest, res: Response) => {
+        try {
+            if (!req.user) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+    
+            const sellerProfile = await this.userService.createSellerProfile(
+                req.user.id,
+                req.body
+            );
+    
+            res.status(201).json({ message: 'Seller profile created', sellerProfile });
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    };
+
     login = async (req: Request, res: Response) => {
         try {
             const loginUserDto: LoginUserDto = req.body;
@@ -48,17 +65,17 @@ export class UserController {
         }
     };
 
-    getProfile = async (req: AuthRequest, res: Response) => {
+    getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             if (!req.user) {
-                return res.status(401).json({
+                res.status(401).json({
                     message: 'User not found in request'
                 });
+                return;
             }
             const userId = req.user.id;
             const user = await this.userService.getUserById(userId);
             
-            // Remove password from response
             const { password, ...userWithoutPassword } = user;
            
             res.json({
@@ -70,7 +87,7 @@ export class UserController {
             });
         }
     };
-
+    
     updateProfile = async (req: AuthRequest, res: Response) => {
         try {
             if (!req.user) {
@@ -175,4 +192,32 @@ export class UserController {
             });
         }
     };
+
+    //Add this method to UserController class
+createSellerProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const profileData: CreateSellerProfileDto = req.body;
+
+        // Validate required fields
+        if (!profileData.companyName) {
+            return res.status(400).json({ message: 'Company name is required' });
+        }
+
+        const sellerProfile = await this.userService.createSellerProfile(
+            req.user.id,
+            profileData
+        );
+
+        res.status(201).json({
+            message: 'Seller profile created successfully',
+            sellerProfile
+        });
+    } catch (error: any) {
+        res.status(400).json({ message: error?.message || 'Error creating seller profile' });
+    }
+};
 }

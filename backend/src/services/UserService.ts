@@ -4,7 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import { User } from '../entities/User';
 import { BuyerProfile } from '../entities/Buyer';
 import { SellerProfile } from '../entities/SellerProfile';
-import { CreateUserDto, LoginUserDto, UpdateUserDto } from '../dto/user';
+import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user';
 
 export class UserService {
     constructor(
@@ -130,6 +130,33 @@ export class UserService {
         });
     }
 
+    // Add this method to UserService class
+    async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): Promise<SellerProfile> {
+    const user = await this.getUserById(userId);
+    
+    if (!user.isSeller) {
+        throw new Error('User is not a seller');
+    }
+
+    let sellerProfile = await this.sellerProfileRepository.findOne({
+        where: { user: { id: userId } }
+    });
+
+    if (sellerProfile) {
+        // Update existing profile
+        Object.assign(sellerProfile, profileData);
+        return await this.sellerProfileRepository.save(sellerProfile);
+    } 
+
+    // Create new profile
+    const newProfile = new SellerProfile();
+    Object.assign(newProfile, {
+        ...profileData,
+        user
+    });
+    
+    return await this.sellerProfileRepository.save(newProfile);
+}
     async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.getUserById(userId);
         

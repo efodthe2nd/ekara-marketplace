@@ -11,6 +11,7 @@ import { productRepositoryMethods } from './entities/product.repository';
 import { Repository } from 'typeorm';
 import { ProductRepositoryCustom } from './entities/product.repository';
 import dotenv from 'dotenv';
+import { Product } from './entities/Product';
 
 const app = express();
 
@@ -44,7 +45,8 @@ async function initializeApp() {
             Object.assign(
                 AppDataSource.getRepository(Entities.Product),
                 productRepositoryMethods
-            ) as Repository<Entities.Product> & ProductRepositoryCustom
+            ) as Repository<Product> & ProductRepositoryCustom,
+            AppDataSource.getRepository(Entities.SellerProfile)
         );
 
         // Initialize controllers
