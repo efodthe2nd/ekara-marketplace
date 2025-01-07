@@ -32,6 +32,14 @@ export const userRouter = (userController: UserController): Router => {
 
     // Admin routes
     router.get('/users', authMiddleware, userController.getAllUsers as RequestHandler);
+    console.log('Setting up seller-profile route...');
+    router.post('/seller-profile', 
+        authMiddleware, 
+        requireRole('seller'), 
+        userController.createSellerProfile as RequestHandler
+    );
+
+    console.log('User routes setup complete');
 
     return router;
 };

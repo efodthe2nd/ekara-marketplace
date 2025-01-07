@@ -1,6 +1,14 @@
-// src/dto/user/CreateSellerProfileDto.ts
+import { IsString, IsOptional } from 'class-validator';
+
 export class CreateSellerProfileDto {
-  companyName: string;
-  companyDescription?: string;
-  website?: string;
+    @IsString()
+    companyName: string;
+
+    @IsString()
+    @IsOptional()
+    companyDescription?: string;
+
+    @IsString()
+    @IsOptional()
+    website?: string;
 }

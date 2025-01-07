@@ -27,22 +27,6 @@ export class UserController {
         }
     };
 
-    createSellerProfile = async (req: AuthRequest, res: Response) => {
-        try {
-            if (!req.user) {
-                return res.status(401).json({ message: 'Unauthorized' });
-            }
-    
-            const sellerProfile = await this.userService.createSellerProfile(
-                req.user.id,
-                req.body
-            );
-    
-            res.status(201).json({ message: 'Seller profile created', sellerProfile });
-        } catch (error: any) {
-            res.status(400).json({ message: error.message });
-        }
-    };
 
     login = async (req: Request, res: Response) => {
         try {
@@ -194,11 +178,15 @@ export class UserController {
     };
 
     //Add this method to UserController class
-createSellerProfile = async (req: AuthRequest, res: Response) => {
-    try {
-        if (!req.user) {
+    createSellerProfile = async (req: AuthRequest, res: Response) => {
+        console.log('Creating seller profile:', {
+            userId: req.user?.id,
+            body: req.body
+        });
+        try {
+            if (!req.user) {
             return res.status(401).json({ message: 'Unauthorized' });
-        }
+            }
 
         const profileData: CreateSellerProfileDto = req.body;
 

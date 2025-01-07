@@ -17,28 +17,46 @@ export class ProductService {
     Object.assign(this.productRepository, productRepositoryMethods);
   }
 
-  async createProduct(createProductDto: CreateProductDto, sellerId: number): Promise<Product> {
-    this.validateProductInput(createProductDto);
+  async createProduct(createProductDto: CreateProductDto, userId: number): Promise<Product> {
+    // Find seller profile using the user relation
+    const sellerProfile = await this.sellerRepository.findOne({
+        where: {
+            user: {
+                id: userId
+            }
+        }
+    });
 
-    const seller = await this.sellerRepository.findOneBy({ id: sellerId });
-    if (!seller) {
-      throw new Error('Seller not found');
+    if (!sellerProfile) {
+        throw new Error('Seller profile not found');
     }
 
     const newProduct = this.productRepository.create({
-      ...createProductDto,
-      seller,
-      createdAt: new Date(),
-      updatedAt: new Date()
+        ...createProductDto,
+        seller: sellerProfile,
+        createdAt: new Date(),
+        updatedAt: new Date()
     });
 
     return this.productRepository.save(newProduct);
-  }
+ }
 
   async getProductById(id: number): Promise<Product | null> {
     return this.productRepository.findOne({
-      where: { id },
-      relations: ['seller']
+        where: { id },
+        relations: {
+            seller: true
+        },
+        select: {
+            seller: {
+                id: true,
+                companyName: true,
+                companyDescription: true,
+                website: true,
+                rating: true,
+                numReviews: true
+            }
+        }
     });
   }
 

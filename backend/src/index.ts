@@ -53,6 +53,13 @@ async function initializeApp() {
         const userController = new UserController(userService);
         const productController = new ProductController(productService);
 
+        app.use((req, res, next) => {
+            console.log(`${req.method} ${req.path}`);
+            console.log('Headers:', req.headers);
+            console.log('Body:', req.body);
+            next();
+        });
+
         // Initialize routes
         const appRouter = AppRouter(userController, productController);
         app.use('/api', appRouter);

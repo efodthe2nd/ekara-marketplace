@@ -5,6 +5,7 @@ import { User } from '../entities/User';
 import { BuyerProfile } from '../entities/Buyer';
 import { SellerProfile } from '../entities/SellerProfile';
 import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user';
+//import { CreateSellerProfileDto } from '../dto/user/CreateSellerProfileDto';
 
 export class UserService {
     constructor(
