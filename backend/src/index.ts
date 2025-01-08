@@ -6,12 +6,17 @@ import { UserService } from './services/UserService';
 import * as Entities from './entities';
 import { UserController } from './controllers/UserController';
 import { ProductService } from './services/ProductService';
+import { OrderService } from './services/OrderService';
+import { OrderController } from './controllers/OrderController';
 import { ProductController } from './controllers/ProductController';
 import { productRepositoryMethods } from './entities/product.repository';
 import { Repository } from 'typeorm';
 import { ProductRepositoryCustom } from './entities/product.repository';
 import dotenv from 'dotenv';
 import { Product } from './entities/Product';
+import { BidService } from './services/BidService';
+import { BidController } from './controllers/BidController';
+import { initializeBidScheduler } from './schedulers';
 
 const app = express();
 
@@ -49,9 +54,28 @@ async function initializeApp() {
             AppDataSource.getRepository(Entities.SellerProfile)
         );
 
+        // Initialize services
+        const orderService = new OrderService(
+            AppDataSource.getRepository(Entities.Order),
+            AppDataSource.getRepository(Entities.OrderItem),
+            AppDataSource.getRepository(Entities.Product)
+        );
+
         // Initialize controllers
         const userController = new UserController(userService);
         const productController = new ProductController(productService);
+        const orderController = new OrderController(orderService);
+
+        const bidService = new BidService(
+            AppDataSource.getRepository(Entities.BidListing),
+            AppDataSource.getRepository(Entities.Bid),
+            AppDataSource.getRepository(Entities.Product)
+        );
+        const bidController = new BidController(bidService);
+        
+        // Initialize bid scheduler
+        initializeBidScheduler(bidService);
+
 
         app.use((req, res, next) => {
             console.log(`${req.method} ${req.path}`);
@@ -61,7 +85,7 @@ async function initializeApp() {
         });
 
         // Initialize routes
-        const appRouter = AppRouter(userController, productController);
+        const appRouter = AppRouter(userController, productController, orderController, bidController);
         app.use('/api', appRouter);
 
         // Error handling middleware

@@ -1,17 +1,22 @@
+// routes/index.ts
 import { Router } from 'express';
 import { userRouter } from './user.routes';
 import { UserController } from '../controllers/UserController';
 import { ProductController } from '../controllers/ProductController';
+import { OrderController } from '../controllers/OrderController';
+import { BidController } from '../controllers/BidController';
 
 export const AppRouter = (
-    userController: UserController, 
-    productController: ProductController
+    userController: UserController,
+    productController: ProductController,
+    orderController: OrderController,
+    bidController: BidController
 ): Router => {
     const router = Router();
-    
+
     // Add debug log before mounting routes
     console.log('Initializing routes...');
-    
+
     const userRoutes = userRouter(userController);
     // Debug log user routes
     console.log('User routes:', userRoutes.stack.map((r: any) => {
@@ -20,15 +25,18 @@ export const AppRouter = (
         }
         return null;
     }).filter(Boolean));
-    
+
     router.use('/auth', userRoutes);
     router.use('/products', productController.router);
-    
+    router.use('/orders', orderController.router);
+    router.use('/bids', bidController.router);
+
     // Debug log all routes after mounting
     console.log('All routes mounted at:', {
         auth: '/api/auth/*',
-        products: '/api/products/*'
+        products: '/api/products/*',
+        orders: '/api/orders/*'
     });
-    
+
     return router;
 };

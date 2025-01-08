@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany } from 'typeorm';
 import { BuyerProfile } from './Buyer';
 import { SellerProfile } from './SellerProfile';
+import { Order } from './Order';
 
 @Entity('users')
 export class User {
@@ -33,4 +34,7 @@ export class User {
 
     @OneToOne(() => SellerProfile, (sellerProfile) => sellerProfile.user)
     sellerProfile: SellerProfile;
+
+    @OneToMany(() => Order, order => order.buyer)
+    orders: Order[];
 }

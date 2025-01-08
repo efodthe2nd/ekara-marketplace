@@ -1,6 +1,9 @@
 export { SellerProfile } from './SellerProfile';
 export { BuyerProfile } from './Buyer';
 export { Product } from './Product';
-export * from './Order';
-export * from './Review';
+export { Order } from './Order';
+export { Review } from './Review';
 export { User } from './User';
+export { OrderItem } from './OrderItem';
+export { BidListing } from './BidListing';
+export { Bid } from './Bid';
