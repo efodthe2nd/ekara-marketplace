@@ -1,4 +1,11 @@
-import { AuthProvider } from '@/lib/auth/AuthContext';
+// src/app/layout.tsx
+//import { AuthProvider } from '@/lib/auth/AuthContext';
+import './globals.css';
+
+export const metadata = {
+  title: 'Spareparts Marketplace',
+  description: 'Buy and sell spare parts online',
+};
 
 export default function RootLayout({
   children,
@@ -8,9 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <main>{children}</main>
-        </AuthProvider>
+        {children}
       </body>
     </html>
   );
