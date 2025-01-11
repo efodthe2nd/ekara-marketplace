@@ -7,9 +7,9 @@ export interface User {
   isSeller: boolean;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
+export interface AuthResponse {
+  token: string;
+  user: User;
 }
 
 export interface RegisterData {
@@ -17,15 +17,10 @@ export interface RegisterData {
   username: string;
   password: string;
   role: 'buyer' | 'seller';
-  firstName?: string;
-  lastName?: string;
-  address?: string;
-  companyName?: string;
-  companyDescription?: string;
-  website?: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
+export interface ErrorResponse {
+  message: string;
+  statusCode?: number;
+  error?: string;
 }

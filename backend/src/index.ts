@@ -17,8 +17,15 @@ import { Product } from './entities/Product';
 import { BidService } from './services/BidService';
 import { BidController } from './controllers/BidController';
 import { initializeBidScheduler } from './schedulers';
+import cors from 'cors';
 
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:3001', // Your frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
