@@ -44,25 +44,25 @@ const RegisterForm = () => {
 
           {/* Progress Steps */}
           <div className="space-y-6">
-            {[
-              { num: 1, text: 'Account Details' },
-              { num: 2, text: 'Personal Information' },
-              { num: 3, text: 'Additional Details' },
-            ].map((item) => (
-              <div key={item.num} className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    step >= item.num
-                      ? 'bg-white text-[#111827]'
-                      : 'bg-[#1f2937] text-white'
-                  }`}
-                >
-                  {item.num}
-                </div>
-                <span className="ml-3 text-sm">{item.text}</span>
-              </div>
-            ))}
-          </div>
+  {[
+    { num: 1, text: 'Account Details' },
+    { num: 2, text: 'Personal Information' },
+    { num: 3, text: formData.role === 'seller' ? 'Business Details' : 'Additional Details' }, // Dynamic text based on role
+  ].map((item) => (
+    <div key={item.num} className="flex items-center">
+      <div
+        className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+          step >= item.num
+            ? 'bg-white text-[#111827]'
+            : 'bg-[#1f2937] text-white'
+        }`}
+      >
+        {item.num}
+      </div>
+      <span className="ml-3 text-sm">{item.text}</span>
+    </div>
+  ))}
+</div>
         </div>
 
         {/* Right Panel */}
@@ -78,7 +78,7 @@ const RegisterForm = () => {
                   <label className="block text-sm text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
-                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -87,7 +87,7 @@ const RegisterForm = () => {
                   <label className="block text-sm text-gray-700 mb-2">Username</label>
                   <input
                     type="text"
-                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900"
                     placeholder="Choose a username"
                   />
                 </div>
@@ -96,7 +96,7 @@ const RegisterForm = () => {
                   <label className="block text-sm text-gray-700 mb-2">Password</label>
                   <input
                     type="password"
-                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+                    className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900"
                     placeholder="Create a password"
                   />
                 </div>
@@ -117,6 +117,127 @@ const RegisterForm = () => {
                 </p>
               </>
             )}
+            {step === 2 && (
+  <>
+    <div>
+      <label className="block text-sm text-gray-700 mb-2">First Name</label>
+      <input
+        type="text"
+        className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+        placeholder="Enter your first name"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm text-gray-700 mb-2">Last Name</label>
+      <input
+        type="text"
+        className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+        placeholder="Enter your last name"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm text-gray-700 mb-2">Address</label>
+      <input
+        type="text"
+        className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+        placeholder="Enter your address"
+      />
+    </div>
+
+    <div className="flex justify-between">
+      <button
+        type="button"
+        onClick={() => setStep(1)}
+        className="px-6 text-gray-700 hover:text-gray-900"
+      >
+        Back
+      </button>
+      <button
+        type="button"
+        onClick={() => setStep(3)}
+        className="w-32 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors"
+      >
+        Next
+      </button>
+    </div>
+  </>
+)}
+{step === 3 && (
+  <>
+    {formData.role === 'seller' ? (
+      // Seller specific fields
+      <>
+        <div>
+          <label className="block text-sm text-gray-700 mb-2">Company Name</label>
+          <input
+            type="text"
+            className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+            placeholder="Enter company name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-2">Company Description</label>
+          <textarea
+            className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500 min-h-[120px]"
+            placeholder="Describe your company"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-2">Website (Optional)</label>
+          <input
+            type="url"
+            className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+            placeholder="Enter company website"
+          />
+        </div>
+      </>
+    ) : (
+      // Buyer specific fields
+      <>
+        <div>
+          <label className="block text-sm text-gray-700 mb-2">Phone Number</label>
+          <input
+            type="tel"
+            className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+            placeholder="Enter phone number"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-2">Preferred Contact Method</label>
+          <select
+            className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900"
+          >
+            <option value="">Select preferred contact method</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+      </>
+    )}
+
+    <div className="flex justify-between">
+      <button
+        type="button"
+        onClick={() => setStep(2)}
+        className="px-6 text-gray-700 hover:text-gray-900"
+      >
+        Back
+      </button>
+      <button
+        type="submit"
+        className="w-32 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors"
+      >
+        Submit
+      </button>
+    </div>
+  </>
+)}
           </form>
         </div>
       </div>
