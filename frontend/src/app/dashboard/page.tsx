@@ -14,7 +14,7 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get<ProductResponse>('/products');
+        const response = await api.get<ProductResponse>('/api/products');
         setProducts(response.data.products);
         setFilteredProducts(response.data.products);
         setLoading(false);
