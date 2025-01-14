@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Product } from '@/types/product';
 import Image from 'next/image';
+import { X, Package, Truck, Shield } from 'lucide-react';
 
 interface ProductModalProps {
   product: Product;
@@ -15,20 +16,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Robust image URL handling
   const getImageUrl = (imageName: string) => {
-    // If it's already a full URL, return as is
     if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
       return imageName;
     }
-
-    // Ensure the image starts with a slash
-    return imageName.startsWith('/') 
-      ? imageName 
-      : `/uploads/${imageName}`;
+    return imageName.startsWith('/') ? imageName : `/uploads/${imageName}`;
   };
 
-  // Get the first image or use a placeholder
   const imageSrc = product.images && product.images.length > 0 
     ? getImageUrl(product.images[0])
     : '/placeholder-image.jpg';
@@ -42,74 +36,113 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center backdrop-blur-sm">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">{product.name}</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        {/* Close Button - Absolute positioned */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        <div className="grid md:grid-cols-2 gap-0">
+          {/* Left Side - Image */}
+        <div className="relative w-full h-full min-h-[500px] bg-gray-100">
+          <Image 
+            src={imageSrc}
+            alt={product.name}
+            fill
+            style={{ objectFit: 'cover' }}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="w-full h-full"
+          />
         </div>
-        
-        <div className="grid md:grid-cols-2 gap-6 p-6">
-          <div className="relative w-full h-64">
-            <Image 
-              src={imageSrc}
-              alt={product.name}
-              fill
-              style={{ objectFit: 'cover' }}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-          
-          <div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">Product Details</h3>
-            <p className="mb-4 text-gray-700">{product.description}</p>
-            
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <span className="font-medium text-gray-900">Category:</span> <span className="text-gray-700">{product.category}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900">Manufacturer:</span> <span className="text-gray-700">{product.manufacturer}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900">Compatibility:</span> <span className="text-gray-700">{product.compatibility}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900">Dimensions:</span> <span className="text-gray-700">{product.dimensions}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900">Weight:</span> <span className="text-gray-700">{product.weight} kg</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900">Warranty:</span> <span className="text-gray-700">{product.warranty}</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold text-gray-900">${parseFloat(product.price).toFixed(2)}</span>
-              <span className="text-sm text-gray-500">
-                {product.stock} in stock
+
+          {/* Right Side - Product Details */}
+          <div className="p-8">
+            {/* Category Badge */}
+            <div className="mb-4">
+              <span className="bg-blue-50 text-blue-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                {product.category}
               </span>
             </div>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h2>
             
+            {/* Price and Stock */}
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-3xl font-bold text-gray-900">
+                ${parseFloat(product.price).toFixed(2)}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                product.stock > 10 
+                  ? 'bg-green-100 text-green-800'
+                  : product.stock > 0
+                  ? 'bg-orange-100 text-orange-800'
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {product.stock > 10 
+                  ? 'In Stock' 
+                  : product.stock > 0
+                  ? `Only ${product.stock} left`
+                  : 'Out of Stock'}
+              </span>
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 mb-6">{product.description}</p>
+
+            {/* Specifications Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="space-y-1">
+                <span className="text-sm text-gray-500">Manufacturer</span>
+                <p className="font-medium text-gray-900">{product.manufacturer}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-gray-500">Compatibility</span>
+                <p className="font-medium text-gray-900">{product.compatibility}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-gray-500">Dimensions</span>
+                <p className="font-medium text-gray-900">{product.dimensions}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-gray-500">Weight</span>
+                <p className="font-medium text-gray-900">{product.weight} kg</p>
+              </div>
+            </div>
+
+            {/* Features/Benefits */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Truck className="h-5 w-5 text-blue-600" />
+                <span>Free shipping on orders over $100</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Shield className="h-5 w-5 text-blue-600" />
+                <span>{product.warranty} warranty included</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Package className="h-5 w-5 text-blue-600" />
+                <span>Genuine {product.manufacturer} parts</span>
+              </div>
+            </div>
+
+            {/* Seller Information */}
             {product.seller?.companyName && (
-              <div className="mb-4">
-                <span className="font-medium text-gray-900">Seller:</span> <span className="text-gray-700">{product.seller.companyName}</span>
+              <div className="border-t border-gray-200 pt-4 mb-6">
+                <span className="text-sm text-gray-500">Sold by</span>
+                <p className="font-medium text-gray-900">{product.seller.companyName}</p>
               </div>
             )}
-            
+
+            {/* Buy Button */}
             <button
               onClick={handleBuyNow}
-              className="w-full bg-blue-500 text-white py-3 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
             >
-              Buy Now
+              {user ? 'Buy Now' : 'Login to Purchase'}
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export function Header() {
@@ -11,6 +12,12 @@ export function Header() {
   const handleLogout = () => {
     logout();
   };
+
+  const pathname = usePathname();
+  
+  if (pathname === "/dashboard") {
+    return null;
+  }
 
   return (
     <header className="bg-gray-900 text-white py-4 shadow">

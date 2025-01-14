@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Attempting login for:', email);
       
-      const { data } = await api.post<AuthResponse>('/auth/login', { 
+      const { data } = await api.post<AuthResponse>('/api/auth/login', { 
         email, 
         password 
       });
