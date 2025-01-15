@@ -19,6 +19,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
       await login(email, password);
       onSuccess?.();
@@ -66,7 +67,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
               fill="none"
-              viewBox="0 0 24 24"
+              viewBox="10 0 24 24"
               stroke="currentColor"
             >
               <path
@@ -81,7 +82,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
               fill="none"
-              viewBox="0 0 24 24"
+              viewBox="10 0 24 24"
               stroke="currentColor"
             >
               <path

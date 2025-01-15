@@ -23,57 +23,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('token');
-        
-        if (token) {
-          // Verify token with backend
-          const { data } = await api.get<{ user: User }>('/auth/profile');
-          setUser(data.user);
+        const storedUser = localStorage.getItem('user');
+  
+        if (token && storedUser) {
+          setUser(JSON.parse(storedUser));
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
-
+  
     checkAuth();
   }, []);
   
+  
   const login = async (email: string, password: string) => {
     try {
-      console.log('Attempting login for:', email);
-      
-      const { data } = await api.post<AuthResponse>('/api/auth/login', { 
-        email, 
-        password 
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
   
-      console.log('Login response:', data);
-      localStorage.setItem('token', data.token);
-      
-      const storedToken = localStorage.getItem('token');
-      console.log('Stored token:', storedToken);
-  
-      setUser(data.user);
-  
-      return data;
-    } catch (error) {
-      // Generic error handling
-      console.error('Login error:', error);
-      
-      // Check if error has a response
-      if (error instanceof Error && 'response' in error) {
-        const apiError = error as { response?: { data?: ErrorResponse } };
-        throw new Error(
-          apiError.response?.data?.message || 'Login failed'
-        );
+      if (!response.ok) {
+        throw new Error('Login failed');
       }
   
+      const data = await response.json();
+      console.log('Login response:', data);
+  
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+  
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   };
+  
 
   const register = async (userData: RegisterData) => {
     try {

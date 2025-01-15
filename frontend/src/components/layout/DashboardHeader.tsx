@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ShoppingCart, Bell, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import Link from 'next/link';
 
 export function DashboardHeader() {
   const router = useRouter();
@@ -14,10 +15,12 @@ export function DashboardHeader() {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/auth/login');
+    router.push('/api/auth/login');
   };
+  console.log('Current user:', user);
 
   return (
+    
     <nav className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
@@ -74,33 +77,37 @@ export function DashboardHeader() {
             {/* Profile Section */}
             {user ? (
               <div className="relative">
-                <button 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-2 p-2"
-                >
-                  <User className="h-6 w-6 text-gray-500" />
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-2 p-2"
+              >
+                <User className="h-6 w-6 text-gray-500" />
+                {user ? (
                   <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                </button>
-
-                {showProfileMenu && (
-  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-    <a 
-      href="/settings" 
-      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-    >
-      <Settings className="mr-3 h-5 w-5 text-gray-400" />
-      Settings
-    </a>
-    <button 
-      onClick={handleLogout}
-      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-    >
-      <LogOut className="mr-3 h-5 w-5 text-gray-400" />
-      Logout
-    </button>
-  </div>
-)}
-              </div>
+                ) : (
+                  <span className="text-sm font-medium text-gray-700">Sign In</span>
+                )}
+              </button>
+            
+              {showProfileMenu && user && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                  <Link 
+                    href="/settings" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Settings className="mr-3 h-5 w-5 text-gray-400" />
+                    Settings
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <LogOut className="mr-3 h-5 w-5 text-gray-400" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
             ) : (
               <button 
                 onClick={() => router.push('/auth/login')}
