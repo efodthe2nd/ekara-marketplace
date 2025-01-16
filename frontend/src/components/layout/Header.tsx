@@ -23,7 +23,7 @@ export function Header() {
     <header className="bg-gray-900 text-white py-4 shadow">
       <div className="container mx-auto px-4 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold ml-4">
-          Checkprices
+          CheckPartsOnline
         </Link>
 
         <div className="flex items-center space-x-4">
