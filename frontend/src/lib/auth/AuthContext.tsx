@@ -2,7 +2,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { User, RegisterData, AuthResponse, ErrorResponse } from '@/types/auth';
+import { User, RegisterData, AuthResponse } from '@/types/auth';
+import { useRouter } from 'next/navigation';
 import api from '../api/axios';
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
   
       const data = await response.json();
-      console.log('Login response:', data);
+      //console.log('Login response:', data);
   
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -75,35 +77,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.post<AuthResponse>('/auth/register', userData);
       
-      console.log('Registration response:', data);
       localStorage.setItem('token', data.token);
-      
-      const storedToken = localStorage.getItem('token');
-      console.log('Stored token:', storedToken);
-  
       setUser(data.user);
   
       return data;
     } catch (error) {
-      // Generic error handling
       console.error('Login error:', error);
       
       // Check if error has a response
-      if (error instanceof Error && 'response' in error) {
-        const apiError = error as { response?: { data?: ErrorResponse } };
-        throw new Error(
-          apiError.response?.data?.message || 'Login failed'
-        );
-      }
+      // if (error instanceof Error && 'response' in error) {
+      //   const apiError = error as { response?: { data?: ErrorResponse } };
+      //   throw new Error(
+      //     apiError.response?.data?.message || 'Login failed'
+      //   );
+      // }
   
       throw error;
     }
   };
+
   const logout = () => {
     // Remove token from localStorage
     localStorage.removeItem('token');
     // Clear user in context
     setUser(null);
+    router.push('/');
   };
 
   return (

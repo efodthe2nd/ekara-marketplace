@@ -36,4 +36,8 @@ export class UpdateUserDto {
     @IsString()
     @IsOptional()
     website?: string;
+
+    @IsString()
+    @IsOptional()
+    bio?: string;
 }

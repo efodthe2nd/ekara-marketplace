@@ -158,32 +158,35 @@ export class UserService {
     
     return await this.sellerProfileRepository.save(newProfile);
 }
-    async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
-        const user = await this.getUserById(userId);
-        
-        // Update base user fields
-        if (updateUserDto.email) user.email = updateUserDto.email;
-        if (updateUserDto.username) user.username = updateUserDto.username;
-        if (updateUserDto.password) {
-            user.password = await bcrypt.hash(updateUserDto.password, 10);
-        }
-
-        // Update buyer profile if it exists
-        if (user.isBuyer && user.buyerProfile) {
-            if (updateUserDto.firstName) user.buyerProfile.firstName = updateUserDto.firstName;
-            if (updateUserDto.lastName) user.buyerProfile.lastName = updateUserDto.lastName;
-            if (updateUserDto.address) user.buyerProfile.address = updateUserDto.address;
-            await this.buyerProfileRepository.save(user.buyerProfile);
-        }
-
-        // Update seller profile if it exists
-        if (user.isSeller && user.sellerProfile) {
-            if (updateUserDto.companyName) user.sellerProfile.companyName = updateUserDto.companyName;
-            if (updateUserDto.companyDescription) user.sellerProfile.companyDescription = updateUserDto.companyDescription;
-            if (updateUserDto.website) user.sellerProfile.website = updateUserDto.website;
-            await this.sellerProfileRepository.save(user.sellerProfile);
-        }
-
-        return this.userRepository.save(user);
+async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.getUserById(userId);
+    
+    // Update base user fields
+    if (updateUserDto.email) user.email = updateUserDto.email;
+    if (updateUserDto.username) user.username = updateUserDto.username;
+    if (updateUserDto.password) {
+        user.password = await bcrypt.hash(updateUserDto.password, 10);
     }
+    if (updateUserDto.bio !== undefined) {  // Add this line to handle bio
+        user.bio = updateUserDto.bio;       // Even if it's empty string
+    }
+
+    // Update buyer profile if it exists
+    if (user.isBuyer && user.buyerProfile) {
+        if (updateUserDto.firstName) user.buyerProfile.firstName = updateUserDto.firstName;
+        if (updateUserDto.lastName) user.buyerProfile.lastName = updateUserDto.lastName;
+        if (updateUserDto.address) user.buyerProfile.address = updateUserDto.address;
+        await this.buyerProfileRepository.save(user.buyerProfile);
+    }
+
+    // Update seller profile if it exists
+    if (user.isSeller && user.sellerProfile) {
+        if (updateUserDto.companyName) user.sellerProfile.companyName = updateUserDto.companyName;
+        if (updateUserDto.companyDescription) user.sellerProfile.companyDescription = updateUserDto.companyDescription;
+        if (updateUserDto.website) user.sellerProfile.website = updateUserDto.website;
+        await this.sellerProfileRepository.save(user.sellerProfile);
+    }
+
+    return this.userRepository.save(user);
+}
 }

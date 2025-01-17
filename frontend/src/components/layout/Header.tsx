@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -8,13 +8,25 @@ import { useAuth } from "@/lib/auth/AuthContext";
 export function Header() {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = () => {
     logout();
   };
 
   const pathname = usePathname();
-  
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (pathname === "/dashboard") {
     return null;
   }
@@ -34,7 +46,7 @@ export function Header() {
             Explore
           </Link>
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 className="flex items-center space-x-2 focus:outline-none hover:text-gray-300"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -55,24 +67,26 @@ export function Header() {
               </button>
 
               {isDropdownOpen && (
-                <ul className="absolute right-4 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10">
-                  <li>
-                    <Link
-                      href="/settings"
-                      className="block px-4 py-2 hover:bg-gray-700"
-                    >
-                      Settings
-                    </Link>
-                  </li>
-                  <li>
-                    <button
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-700"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </li>
-                </ul>
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 hover:bg-gray-700 text-white"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="block px-4 py-2 hover:bg-gray-700 text-white"
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-white"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
           ) : (

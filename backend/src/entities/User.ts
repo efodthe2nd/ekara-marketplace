@@ -17,6 +17,9 @@ export class User {
     @Column()
     password: string;
 
+    @Column({ type: 'text', nullable: true })  // Added bio field
+    bio: string;
+
     @Column('boolean', { default: false })
     isBuyer: boolean;
 

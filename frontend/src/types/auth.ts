@@ -5,6 +5,7 @@ export interface User {
   username: string;
   isBuyer: boolean;
   isSeller: boolean;
+  bio?: string;
 }
 
 export interface AuthResponse {
