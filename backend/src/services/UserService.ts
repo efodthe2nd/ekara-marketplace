@@ -161,6 +161,30 @@ export class UserService {
 async updateUser(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.getUserById(userId);
     
+    // Handle password update with verification
+    if (updateUserDto.password && updateUserDto.currentPassword) {
+        // First verify the current password
+        const isPasswordValid = await bcrypt.compare(
+            updateUserDto.currentPassword,
+            user.password
+        );
+        
+        if (!isPasswordValid) {
+            throw new Error('Current password is incorrect');
+        }
+        
+        // Only update password if current password was correct
+        user.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    // Rest of your existing update logic...
+    if (updateUserDto.email) user.email = updateUserDto.email;
+    if (updateUserDto.username) user.username = updateUserDto.username;
+    if (updateUserDto.bio !== undefined) {
+        user.bio = updateUserDto.bio;
+    }
+
+    
     // Update base user fields
     if (updateUserDto.email) user.email = updateUserDto.email;
     if (updateUserDto.username) user.username = updateUserDto.username;

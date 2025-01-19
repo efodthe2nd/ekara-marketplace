@@ -40,4 +40,12 @@ export class UpdateUserDto {
     @IsString()
     @IsOptional()
     bio?: string;
+
+    @IsOptional()
+   @IsString()
+   currentPassword?: string;
+
+   @IsOptional()
+   @IsString()
+   newPassword?: string;
 }

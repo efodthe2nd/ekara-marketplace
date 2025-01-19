@@ -26,11 +26,6 @@ const SettingsPage = () => {
     { id: 'account', label: 'Account', icon: LogOut },
   ];
 
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    bio: '',
-  });
 
   const handleLogout = async () => {
     await logout();
@@ -61,53 +56,149 @@ const SettingsPage = () => {
       }
       checkAuth();
     }, [router]);
+
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
     
+          const response = await fetch('http://localhost:3000/api/auth/profile', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+    
+          const { user } = await response.json();  // Destructure the user from response
+          setFormData({
+            username: user.username || '',
+            email: user.email || '',
+            bio: user.bio || ''
+          });
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          setError('Failed to load user data');
+          setTimeout(() => {
+            setError('');
+          }, 3000);
+        }
+      };
+    
+      fetchUserData();
+    }, []); // Empty dependency array means this runs once when component mounts
+    
+    // Add these state variables for password fields
+const [passwordData, setPasswordData] = useState({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
 
-  
+// Add a new handler for password updates
+const handleUpdatePassword = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
+  setSuccess('');
 
-  
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-  
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    setError('New passwords do not match');
+    setIsLoading(false);
+    return;
+  }
 
-      
-  
-      const updateData = await response.json();
-      setProfile(updateData);
+  try {
+    const response = await fetch('http://localhost:3000/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        currentPassword: passwordData.currentPassword,
+        password: passwordData.newPassword  // This will be the new password
+      })
+    });
 
-      setSuccess('Profile updated successfully');
-
-      setTimeout(() => {
-        setSuccess('');
-      }, 3000);
-      
-      // Update the user in context if needed
-      // updateUser(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
-      setTimeout(() => {
-        setError('');
-      }, 3000);
-    } finally {
-      setIsLoading(false);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update password');
     }
-  };
+
+    setSuccess('Password updated successfully');
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
+
+  } catch (err) {
+    console.error('Password update error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to update password');
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoading(true);
+      setError('');
+      setSuccess('');
+    
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(formData)
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to update profile');
+        }
+    
+        const updateData = await response.json();
+        setFormData(updateData);
+    
+        // Update the user data in localStorage
+        const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUserData = {
+          ...currentUserData,
+          ...updateData  // or specifically update bio: formData.bio if you prefer
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUserData));
+    
+        setSuccess('Profile updated successfully');
+    
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to update profile');
+        setTimeout(() => {
+          setError('');
+        }, 3000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
 
   return (
     <AuthProvider>
@@ -248,54 +339,72 @@ const SettingsPage = () => {
               </div>
             )}
 
-            {activeSection === 'security' && (
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-6">Security Settings</h3>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-4">Change Password</h4>
-                    <form className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Current Password</label>
-                        <input
-                          type="password"
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">New Password</label>
-                        <input
-                          type="password"
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                        <input
-                          type="password"
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div className="flex justify-end">
-                        <button
-                          type="submit"
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                          Update Password
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
-                    <button className="text-blue-600 text-sm hover:text-blue-700">
-                      Enable Two-Factor Authentication
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
+{activeSection === 'security' && (
+  <div>
+    <h3 className="text-lg font-medium text-gray-900 mb-8">Security Settings</h3> {/* Increased margin bottom */}
+    <div className="space-y-8"> {/* Increased space between sections */}
+      <div>
+        <h4 className="text-sm font-medium text-gray-900 mb-6">Change Password</h4> {/* Increased margin bottom */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg">
+            {success}
+          </div>
+        )}
+        <form className="space-y-6" onSubmit={handleUpdatePassword}> {/* Increased space between form elements */}
+          <div className="space-y-2"> {/* Added container with spacing for label and input */}
+            <label className="block text-sm font-medium text-gray-700">Current Password</label>
+            <input
+              type="password"
+              value={passwordData.currentPassword}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+              className="mt-1 block w-3/4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">New Password</label>
+            <input
+              type="password"
+              value={passwordData.newPassword}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+              className="mt-1 block w-3/4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+            <input
+              type="password"
+              value={passwordData.confirmPassword}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              className="mt-1 block w-3/4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex justify-end mt-8"> {/* Increased top margin */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Updating...' : 'Update Password'}
+            </button>
+          </div>
+        </form>
+      </div>
+      <div className="mt-8"> {/* Increased top margin */}
+        <h4 className="text-sm font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
+        <button className="text-blue-600 text-sm hover:text-blue-700">
+          Enable Two-Factor Authentication
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             {activeSection === 'account' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-6">Account Settings</h3>

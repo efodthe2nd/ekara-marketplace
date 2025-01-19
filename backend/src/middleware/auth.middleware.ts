@@ -39,9 +39,17 @@ export const authMiddleware = (
 };
 
 // Middleware for checking specific roles
+// In auth.middleware.ts, update requireRole
 export const requireRole = (role: 'buyer' | 'seller') => {
     return (req: Request, res: Response, next: NextFunction): void => {
         const authReq = req as AuthRequest;
+        console.log('Role check:', {
+            required: role,
+            user: authReq.user,
+            hasBuyer: authReq.user?.isBuyer,
+            hasSeller: authReq.user?.isSeller
+        });
+        
         if (!authReq.user) {
             res.status(401).json({ message: 'Unauthorized' });
             return;
@@ -59,7 +67,6 @@ export const requireRole = (role: 'buyer' | 'seller') => {
         next();
     };
 };
-
 // Middleware for checking multiple roles
 export const requireAnyRole = (roles: ('buyer' | 'seller')[]) => {
     return (req: Request, res: Response, next: NextFunction): void => {

@@ -48,7 +48,7 @@ export function DashboardHeader({
   // Handle logout
   const handleLogout = async () => {
     await logout();
-    router.push('/api/auth/login');
+    router.push('/');
   };
 
   // Handle search

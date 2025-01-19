@@ -85,7 +85,7 @@ export class UserController {
             
             // Remove password from response
             const { password, ...userWithoutPassword } = updatedUser;
-
+    
             res.json({
                 message: 'Profile updated successfully',
                 user: userWithoutPassword
