@@ -49,5 +49,11 @@ export const userRouter = (userController: UserController): Router => {
 
     console.log('User routes setup complete');
 
+    router.put(
+        '/profile/location',
+        authMiddleware,
+        userController.updateLocation as RequestHandler
+    );
+
     return router;
 };

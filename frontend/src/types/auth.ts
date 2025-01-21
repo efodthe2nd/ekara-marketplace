@@ -7,6 +7,7 @@ export interface User {
   isSeller: boolean;
   bio?: string;
   profilePicture?: string;
+  location?: string;
 }
 
 export interface AuthResponse {

@@ -239,4 +239,34 @@ export class UserController {
     }
   };
 
+  // src/controllers/UserController.ts
+updateLocation = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(400).json({
+                message: 'No user provided'
+            });
+        }
+        const userId = req.user.id;
+        const { location } = req.body;
+
+        if (!location) {
+            return res.status(400).json({
+                message: 'Location is required'
+            });
+        }
+
+        const updatedUser = await this.userService.updateLocation(userId, location);
+        
+        const { password, ...userWithoutPassword } = updatedUser;
+        res.json({
+            message: 'Location updated successfully',
+            user: userWithoutPassword
+        });
+    } catch (error: any) {
+        res.status(400).json({
+            message: error.message || 'Error updating location'
+        });
+    }
+};
 }

@@ -20,6 +20,9 @@ export class User {
     @Column({ type: 'text', nullable: true })  // Added bio field
     bio: string;
 
+    @Column({ type: 'text', nullable: true })
+    location: string;
+
     @Column('boolean', { default: false })
     isBuyer: boolean;
 
