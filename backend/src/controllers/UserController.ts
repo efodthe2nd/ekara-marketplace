@@ -207,5 +207,36 @@ export class UserController {
     } catch (error: any) {
         res.status(400).json({ message: error?.message || 'Error creating seller profile' });
     }
-};
+  };
+
+  // Add to UserController class
+  uploadProfilePicture = async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user || !req.file) {
+        return res.status(400).json({
+          message: 'No user or file provided'
+        });
+      }
+
+      const userId = req.user.id;
+      const filePath = req.file.path.replace(/\\/g, '/'); // Ensure forward slashes
+
+      // Update user with new profile picture path
+      const updatedUser = await this.userService.updateProfilePicture(userId, filePath);
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      res.json({
+        message: 'Profile picture updated successfully',
+        profilePicUrl: filePath, // Ensure profilePicUrl is returned
+        user: userWithoutPassword
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        message: error.message || 'Error uploading profile picture'
+      });
+    }
+  };
+
 }

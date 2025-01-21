@@ -344,7 +344,7 @@ const handleUpdatePassword = async (e: React.FormEvent) => {
     <h3 className="text-lg font-medium text-gray-900 mb-8">Security Settings</h3> {/* Increased margin bottom */}
     <div className="space-y-8"> {/* Increased space between sections */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 mb-6">Change Password</h4> {/* Increased margin bottom */}
+        <h4 className="text-sm font-medium text-gray-900 mb-6">Update Password</h4> {/* Increased margin bottom */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
             {error}

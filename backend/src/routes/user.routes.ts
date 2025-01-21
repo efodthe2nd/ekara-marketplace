@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { uploadProfilePicture } from '../middleware/upload.middleware';
 import { RequestHandler } from 'express';
 
 export const userRouter = (userController: UserController): Router => {
@@ -37,6 +38,13 @@ export const userRouter = (userController: UserController): Router => {
         authMiddleware, 
         requireRole('seller'), 
         userController.createSellerProfile as RequestHandler
+    );
+
+    router.post(
+        '/profile/picture',
+        authMiddleware,
+        uploadProfilePicture,
+        userController.uploadProfilePicture as RequestHandler
     );
 
     console.log('User routes setup complete');

@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express from 'express';
+import path from 'path';
 import { DataSource } from 'typeorm';
 import { AppRouter } from './routes';
 import { UserService } from './services/UserService';
@@ -29,6 +30,9 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Add this static file configuration
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 const AppDataSource = new DataSource({
     type: "postgres",

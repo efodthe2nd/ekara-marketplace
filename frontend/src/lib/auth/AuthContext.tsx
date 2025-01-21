@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthResponse>;
   register: (userData: RegisterData) => Promise<AuthResponse>;
   logout: () => void;
+  updateUserProfile: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
     checkAuth();
   }, []);
+
+  const updateUserProfile = (updates: Partial<User>) => {
+    setUser((prevUser) => (prevUser ? { ...prevUser, ...updates } : prevUser));
+  };
   
   
   const login = async (email: string, password: string) => {
@@ -112,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUserProfile
       }}
     >
       {children}

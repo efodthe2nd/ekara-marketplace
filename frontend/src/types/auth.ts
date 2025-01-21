@@ -6,6 +6,7 @@ export interface User {
   isBuyer: boolean;
   isSeller: boolean;
   bio?: string;
+  profilePicture?: string;
 }
 
 export interface AuthResponse {

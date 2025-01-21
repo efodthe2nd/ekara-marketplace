@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+// next.config.js
+/** @type {import('next/config').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: ['localhost'],
+  },
+  transpilePackages: ['react-image-crop']
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+module.exports = nextConfig

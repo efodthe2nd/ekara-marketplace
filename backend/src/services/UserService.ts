@@ -131,6 +131,13 @@ export class UserService {
         });
     }
 
+    // Add to UserService class
+async updateProfilePicture(userId: number, filePath: string): Promise<User> {
+    const user = await this.getUserById(userId);
+    user.profilePicture = filePath;
+    return this.userRepository.save(user);
+}
+
     // Add this method to UserService class
     async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): Promise<SellerProfile> {
     const user = await this.getUserById(userId);
