@@ -1,6 +1,7 @@
 // routes/index.ts
 import { Router } from 'express';
 import { userRouter } from './user.routes';
+import { productRouter } from './product.routes';
 import { UserController } from '../controllers/UserController';
 import { ProductController } from '../controllers/ProductController';
 import { OrderController } from '../controllers/OrderController';
@@ -18,6 +19,7 @@ export const AppRouter = (
     console.log('Initializing routes...');
 
     const userRoutes = userRouter(userController);
+    const productRoute = productRouter(productController);
     // Debug log user routes
     console.log('User routes:', userRoutes.stack.map((r: any) => {
         if (r.route) {
@@ -27,6 +29,7 @@ export const AppRouter = (
     }).filter(Boolean));
 
     router.use('/auth', userRoutes);
+    router.use('/api/products', productRoute);
     router.use('/products', productController.router);
     router.use('/orders', orderController.router);
     router.use('/bids', bidController.router);

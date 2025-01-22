@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, ShoppingCart, Bell, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
+import SellPartModal from '@/components/products/CreatePartModal';
 
 export function DashboardHeader({
   searchTerm,
@@ -17,7 +18,7 @@ export function DashboardHeader({
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  //const [searchQuery, setSearchQuery] = useState('');
+  const [showSellModal, setShowSellModal] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,17 +27,10 @@ export function DashboardHeader({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
-      // Check if clicks are outside the profile and notifications dropdown
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(target)
-      ) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
         setShowProfileMenu(false);
       }
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(target)
-      ) {
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
         setShowNotifications(false);
       }
     };
@@ -51,19 +45,14 @@ export function DashboardHeader({
     router.push('/');
   };
 
-  // Handle search
-  // const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchQuery(event.target.value);
-  //   // Add logic to filter products displayed on the dashboard based on `searchQuery`
-  //   console.log('Search query:', event.target.value);
-  // };
+  console.log('User seller status:', user?.isSeller);
+  console.log('Modal state:', showSellModal);
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            {/* Reload on click */}
             <span
               className="text-xl font-bold text-gray-900 cursor-pointer"
               onClick={() => router.refresh()}
@@ -72,11 +61,10 @@ export function DashboardHeader({
             </span>
             <div className="ml-10">
               <div className="relative w-96">
-                {/* Updated text color */}
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)} // Update searchTerm dynamically
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   placeholder="Search for parts..."
                 />
@@ -86,6 +74,18 @@ export function DashboardHeader({
           </div>
 
           <div className="flex items-center space-x-4">
+            {user?.isSeller && (
+              <button
+                onClick={() => {
+                  console.log('Opening modal, user:', user);
+                  setShowSellModal(true);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Sell Parts
+              </button>
+            )}
+
             <button
               onClick={() => router.push('/cart')}
               className="p-2 text-gray-500 hover:text-gray-700 relative"
@@ -136,7 +136,6 @@ export function DashboardHeader({
 
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-                    {/* Profile option */}
                     <Link
                       href="/profile"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -173,6 +172,20 @@ export function DashboardHeader({
           </div>
         </div>
       </div>
+
+      {/* Rendering modal, isOpen: {showSellModal} */}
+      <SellPartModal 
+        isOpen={showSellModal} 
+        onClose={() => {
+          console.log('Closing modal');
+          setShowSellModal(false);
+        }}
+        onSuccess={() => {
+          console.log('Modal success');
+          setShowSellModal(false);
+          router.refresh();
+        }}
+      />
     </nav>
   );
 }

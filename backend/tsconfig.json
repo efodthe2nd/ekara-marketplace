@@ -4,6 +4,7 @@
     "emitDecoratorMetadata": true,
     "types": ["reflect-metadata", "node"],
     "sourceMap": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "target": "es2020",
     "module": "commonjs",
     "lib": ["es6", "dom"],

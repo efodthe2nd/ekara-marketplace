@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Product, ProductResponse } from '@/types/product';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Package } from 'lucide-react';
@@ -14,23 +14,24 @@ const DashboardPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState(''); // State for the search query
 
   // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await api.get<ProductResponse>('/api/products');
-        setProducts(response.data.products);
-        setFilteredProducts(response.data.products); // Initially show all products
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch products', error);
-        setProducts([]);
-        setFilteredProducts([]);
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
+  const fetchProducts = useCallback(async () => {
+    try {
+      const response = await api.get<ProductResponse>('/api/products');
+      setProducts(response.data.products);
+      setFilteredProducts(response.data.products);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch products', error);
+      setProducts([]);
+      setFilteredProducts([]);
+      setLoading(false);
+    }
   }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   // Filter products whenever searchTerm changes
   useEffect(() => {
