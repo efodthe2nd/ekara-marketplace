@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, Bell, User, Settings, LogOut } from 'lucide-react';
+import { Search, Bell, User, Settings, LogOut } from 'lucide-react';
+//import { ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import SellPartModal from '@/components/products/CreatePartModal';
@@ -136,7 +137,7 @@ export function DashboardHeader({
               </button>
             )}
 
-            <button
+            {/* <button
               onClick={() => router.push('/cart')}
               className="p-2 text-gray-500 hover:text-gray-700 relative"
             >
@@ -144,7 +145,7 @@ export function DashboardHeader({
               <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 0
               </span>
-            </button>
+            </button> */}
 
             {user && (
               <div className="relative" ref={notificationsRef}>
