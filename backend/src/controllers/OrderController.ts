@@ -7,40 +7,6 @@ export class OrderController {
     public router: Router;
 
     constructor(private orderService: OrderService) {
-        this.router = Router();
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes(): void {
-        // Buyer routes
-        this.router.post('/', 
-            authMiddleware, 
-            requireRole('buyer'), 
-            this.createOrder as RequestHandler
-        );
-        
-        this.router.get('/my-orders', 
-            authMiddleware, 
-            this.getBuyerOrders as RequestHandler
-        );
-
-        // Seller routes
-        this.router.get('/selling', 
-            authMiddleware, 
-            requireRole('seller'), 
-            this.getSellerOrders as RequestHandler
-        );
-
-        // Common routes
-        this.router.get('/:id', 
-            authMiddleware, 
-            this.getOrderById as RequestHandler
-        );
-        
-        this.router.put('/:id/status', 
-            authMiddleware, 
-            this.updateOrderStatus as RequestHandler
-        );
     }
 
     private createOrder = async (req: AuthRequest, res: Response): Promise<void> => {

@@ -269,4 +269,5 @@ updateLocation = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+
 }

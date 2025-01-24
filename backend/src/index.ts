@@ -20,6 +20,7 @@ import { BidController } from './controllers/BidController';
 import { initializeBidScheduler } from './schedulers';
 import cors from 'cors';
 
+
 const app = express();
 
 app.use(cors({
@@ -30,6 +31,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// In your main server file (e.g., server.ts)
+
 
 // Add this static file configuration
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -52,6 +55,7 @@ async function initializeApp() {
         console.log("Data Source has been initialized!");
 
         // Initialize services
+        console.log("Initializing services..."); 
         const userService = new UserService(
             AppDataSource.getRepository(Entities.User),
             AppDataSource.getRepository(Entities.BuyerProfile),
@@ -66,13 +70,17 @@ async function initializeApp() {
         );
 
         // Initialize services
+        
         const orderService = new OrderService(
             AppDataSource.getRepository(Entities.Order),
             AppDataSource.getRepository(Entities.OrderItem),
             AppDataSource.getRepository(Entities.Product)
         );
 
+        console.log("Services initialized!");
+
         // Initialize controllers
+        console.log("Initializing controllers..."); 
         const userController = new UserController(userService);
         const productController = new ProductController(productService);
         const orderController = new OrderController(orderService);
@@ -83,6 +91,7 @@ async function initializeApp() {
             AppDataSource.getRepository(Entities.Product)
         );
         const bidController = new BidController(bidService);
+        console.log("Controllers Initialized"); 
         
         // Initialize bid scheduler
         initializeBidScheduler(bidService);
@@ -96,6 +105,7 @@ async function initializeApp() {
         });
 
         // Initialize routes
+        console.log("About to initialize routes...");
         const appRouter = AppRouter(userController, productController, orderController, bidController);
         app.use('/api', appRouter);
 

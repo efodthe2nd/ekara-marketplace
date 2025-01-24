@@ -7,17 +7,24 @@ export const productRouter = (productController: ProductController): Router => {
   const router = Router();
 
   // Product routes
-  router.get('/', productController.getProducts as RequestHandler);
-  router.post('/', authMiddleware, productController.createProduct as RequestHandler);
-  router.get('/:id', productController.getProduct as RequestHandler);
+  console.log('Registering product routes...');
   
-  // Image upload route
+  router.get('/', productController.getProducts as RequestHandler);
+  router.get('/:id', productController.getProduct as RequestHandler);
   router.post(
-      '/:id/images',
-      authMiddleware,
-      upload.array('images', 5),
-      productController.uploadProductImages as RequestHandler
+    '/',
+    authMiddleware,
+    upload.array('images', 5),
+    ((req, res, next) => {
+      console.log('Route middleware hit');
+      next();
+    }),
+    productController.createProduct as RequestHandler
   );
+  
+  console.log('Registered product routes...');
+  
+  
 
 
   return router;

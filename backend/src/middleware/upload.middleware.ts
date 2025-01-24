@@ -21,25 +21,52 @@ const fileFilter = (req: any, file: any, cb: any) => {
 };
 
 export const uploadProfilePicture = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 }).single('profilePicture');
 
+
 export const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 5 // Maximum 5 files
+    fileSize: 5 * 1024 * 1024, // 5MB
+    files: 5
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG and WebP allowed.'));
+      cb(new Error('Invalid file type'));
     }
   }
 });
+
+// const productStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/products/');
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//     cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
+//   }
+// });
+
+// export const uploadProductImages = multer({
+//   storage: memoryStorage(),
+//   limits: {
+//     fileSize: 5 * 1024 * 1024,
+//     files: 5
+//   },
+//   fileFilter: (req, file, cb) => {
+//     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+//     if (allowedTypes.includes(file.mimetype)) {
+//       cb(null, true);
+//     } else {
+//       cb(new Error('Invalid file type. Only JPEG, PNG and WebP allowed.'));
+//     }
+//   }
+// });

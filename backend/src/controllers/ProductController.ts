@@ -21,57 +21,48 @@ export class ProductController {
   public router: Router;
 
   constructor(private productService: ProductService) {
-    this.router = Router();
-    this.initializeRoutes();
   }
 
-  private initializeRoutes(): void {
-    // Product CRUD routes
-    this.router.post(
-      "/",
-      authMiddleware,
-      requireRole("seller"),
-      this.createProduct as RequestHandler
-    );
-    
-    this.router.get("/", this.getProducts as RequestHandler);
-    this.router.get("/:id", this.getProduct as RequestHandler);
-    
-    this.router.put(
-      "/:id",
-      authMiddleware,
-      requireRole("seller"),
-      this.updateProduct as RequestHandler
-    );
-    
-    this.router.delete(
-      "/:id",
-      authMiddleware,
-      requireRole("seller"),
-      this.deleteProduct as RequestHandler
-    );
 
-    // Image upload route
-    this.router.post(
-      "/:id/images",
-      authMiddleware,
-      requireRole("seller"),
-      upload.array('images', 5),
-      this.uploadProductImages as RequestHandler
+  // src/controllers/ProductController.ts
+createProduct = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('Received files:', req.files); // Debug line
+    console.log('Received body:', req.body); // Debug line
+
+    const files = req.files as Express.Multer.File[];
+    const productData = JSON.parse(req.body.productData);
+
+    // Convert files to Base64
+    const imageBase64s = files?.map(file => 
+      `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
+    ) || [];
+
+    console.log('Number of images converted:', imageBase64s.length); // Debug line
+
+    const sellerId = (req as AuthRequest).user!.id;
+    
+    // Combine all data into a single object
+    const productToCreate = {
+      ...productData,
+      images: imageBase64s, // This contains the base64 strings
+      sellerId
+    };
+
+    console.log('Creating product with images:', imageBase64s.length > 0); // Debug line
+
+    const product = await this.productService.createProduct(
+      productToCreate,
+      sellerId
     );
+    
+    res.status(201).json(product);
+  } catch (error: any) {
+    console.error('Error creating product:', error);
+    res.status(400).json({ message: error?.message || "An error occurred" });
   }
-
-  public createProduct = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const productDto: CreateProductDto = req.body;
-      const sellerId = (req as AuthRequest).user!.id;
-      const product = await this.productService.createProduct(productDto, sellerId);
-      res.status(201).json(product);
-    } catch (error: any) {
-      res.status(400).json({ message: error?.message || "An error occurred" });
-    }
-  };
-
+};
+  
   public getProducts = async (req: Request, res: Response): Promise<void> => {
     try {
       const { search, category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
@@ -132,37 +123,22 @@ export class ProductController {
 
   public uploadProductImages = async (req: Request, res: Response): Promise<void> => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = Number(req.params.id);
       const files = req.files as Express.Multer.File[];
-  
-      if (!files?.length) {
-        res.status(400).json({ message: 'No files uploaded' });
+      
+      if (!files || files.length === 0) {
+        res.status(400).json({ message: "No files uploaded" });
         return;
       }
-  
-      const uploadDir = 'uploads/products';
-      const imageUrls: string[] = [];
-  
-      // Ensure upload directory exists
-      try {
-        await access(uploadDir, fs.constants.F_OK);
-      } catch {
-        await mkdir(uploadDir, { recursive: true });
-      }
-  
-      // Process files
-      for (const file of files) {
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join(uploadDir, fileName);
-        await writeFile(filePath, file.buffer);
-        imageUrls.push(`products/${fileName}`);
-      }
-  
-      await this.productService.updateProductImages(productId, imageUrls);
-      res.json({ imageUrls });
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      res.status(500).json({ message: 'Failed to upload images' });
+
+      const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
+      const updatedProduct = await this.productService.updateProductImages(productId, imageUrls);
+      
+      res.json(updatedProduct);
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      res.status(500).json({ message: error?.message || "Image upload failed" });
     }
   };
+  
 }

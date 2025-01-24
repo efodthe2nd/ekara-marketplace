@@ -12,12 +12,15 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Robust image URL handling
+  // Updated image URL handling with backwards compatibility
   const getImageUrl = (imageName: string) => {
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+    // If it's already a Base64 string, return as is
+    if (imageName.startsWith('data:image')) {
       return imageName;
     }
-    return imageName.startsWith('/') ? imageName : `/uploads/${imageName}`;
+  
+    // Handle legacy image paths
+    return `http://localhost:3000/${imageName}`;
   };
 
   // Get the first image or use a placeholder
@@ -39,6 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
             style={{ objectFit: 'cover' }}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="rounded-t-xl"
+            quality={75}
           />
           {product.stock <= 5 && product.stock > 0 && (
             <div className="absolute top-2 right-2">

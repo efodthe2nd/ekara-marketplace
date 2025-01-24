@@ -18,7 +18,7 @@ export class Product {
     @Column()
     manufacturer: string;
 
-    @Column('simple-array')
+    @Column('text', { array: true, nullable: true })
     images: string[];
 
     @ManyToOne(() => SellerProfile, seller => seller.products)

@@ -4,6 +4,9 @@ import { SellerProfile } from "../entities/SellerProfile";
 import { CreateProductDto } from "../dto/user/CreateProductDto";
 import { UpdateProductDto } from "../dto/user/UpdateProductDto";
 import { productRepositoryMethods } from "../entities/product.repository";
+import fs from "fs";
+import path from "path";
+
 
 export interface ProductRepositoryCustom extends Repository<Product> {
   searchProducts(query: string): Promise<Product[]>;
@@ -17,31 +20,33 @@ export class ProductService {
     Object.assign(this.productRepository, productRepositoryMethods);
   }
 
-  async createProduct(
-    createProductDto: CreateProductDto,
-    userId: number
-  ): Promise<Product> {
-    // Find seller profile using the user relation
-    const sellerProfile = await this.sellerRepository.findOne({
-      where: {
-        user: {
-          id: userId,
+  // src/services/ProductService.ts
+  async createProduct(productData: Partial<Product>, userId: number): Promise<Product> {
+    try {
+      const sellerProfile = await this.sellerRepository.findOne({
+        where: {
+          user: {
+            id: userId,
+          },
         },
-      },
-    });
-
-    if (!sellerProfile) {
-      throw new Error("Seller profile not found");
+      });
+  
+      if (!sellerProfile) {
+        throw new Error("Seller profile not found");
+      }
+  
+      // Create product directly with the data
+      const newProduct = this.productRepository.create({
+        ...productData,
+        seller: sellerProfile,
+        images: productData.images || [] // Ensure images is always an array
+      });
+  
+      return this.productRepository.save(newProduct);
+    } catch (error) {
+      console.error('Error in createProduct service:', error);
+      throw error;
     }
-
-    const newProduct = this.productRepository.create({
-      ...createProductDto,
-      seller: sellerProfile,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    return this.productRepository.save(newProduct);
   }
 
   async getProductById(id: number): Promise<Product | null> {
@@ -171,12 +176,17 @@ export class ProductService {
   }
 
   async updateProductImages(productId: number, imageUrls: string[]): Promise<Product> {
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+    const product = await this.productRepository.findOne({ 
+      where: { id: productId },
+      relations: ['seller'] 
+    });
+    
     if (!product) {
       throw new Error('Product not found');
     }
-  
-    product.images = imageUrls;
+
+    // Merge new images with existing ones
+    product.images = [...(product.images || []), ...imageUrls];
     return this.productRepository.save(product);
   }
 }

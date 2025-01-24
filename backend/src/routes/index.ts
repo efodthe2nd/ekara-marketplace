@@ -19,7 +19,7 @@ export const AppRouter = (
     console.log('Initializing routes...');
 
     const userRoutes = userRouter(userController);
-    const productRoute = productRouter(productController);
+    const productRoutes = productRouter(productController);
     // Debug log user routes
     console.log('User routes:', userRoutes.stack.map((r: any) => {
         if (r.route) {
@@ -28,11 +28,19 @@ export const AppRouter = (
         return null;
     }).filter(Boolean));
 
+    //Debug log product routes
+    console.log('Product routes:', productRoutes.stack.map((r: any) => {
+        if (r.route) {
+            return `${Object.keys(r.route.methods)} ${r.route.path}`;
+        }
+        return null;
+    }).filter(Boolean));
+
     router.use('/auth', userRoutes);
-    router.use('/api/products', productRoute);
-    router.use('/products', productController.router);
-    router.use('/orders', orderController.router);
-    router.use('/bids', bidController.router);
+    router.use('/products', productRoutes);
+    // router.use('/orders', orderController.router);
+    // router.use('/bids', bidController.router);
+
 
     // Debug log all routes after mounting
     console.log('All routes mounted at:', {

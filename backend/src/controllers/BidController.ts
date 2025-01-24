@@ -6,34 +6,7 @@ import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.mid
 export class BidController {
     public router: Router;
 
-    constructor(private bidService: BidService) {
-        this.router = Router();
-        this.initializeRoutes();
-    }
-
-    private initializeRoutes(): void {
-        // Listing routes
-        this.router.post('/', 
-            authMiddleware, 
-            requireRole('seller'), 
-            this.createBidListing as RequestHandler
-        );
-
-        this.router.get('/', this.getActiveBidListings as RequestHandler);
-        this.router.get('/:id', this.getBidListingById as RequestHandler);
-
-        // Bidding routes
-        this.router.post('/:id/bid', 
-            authMiddleware, 
-            requireRole('buyer'), 
-            this.placeBid as RequestHandler
-        );
-
-        this.router.get('/user/bids', 
-            authMiddleware, 
-            this.getUserBids as RequestHandler
-        );
-    }
+    constructor(private bidService: BidService) {}
 
     private createBidListing = async (req: AuthRequest, res: Response): Promise<void> => {
         try {

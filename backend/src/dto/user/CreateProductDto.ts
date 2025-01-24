@@ -40,4 +40,7 @@ export class CreateProductDto {
 
     @IsString()
     condition: string;
+
+    @IsOptional()
+    files?: Express.Multer.File[];
 }

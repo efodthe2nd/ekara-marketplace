@@ -7,13 +7,18 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import SellPartModal from '@/components/products/CreatePartModal';
 
+interface DashboardHeaderProps {
+  searchTerm: string;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  onProductCreated?: () => void;
+}
+
+
 export function DashboardHeader({
   searchTerm,
   setSearchTerm,
-}: {
-  searchTerm: string;
-  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-}) {
+  onProductCreated,
+}: DashboardHeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -175,17 +180,18 @@ export function DashboardHeader({
 
       {/* Rendering modal, isOpen: {showSellModal} */}
       <SellPartModal 
-        isOpen={showSellModal} 
-        onClose={() => {
-          console.log('Closing modal');
-          setShowSellModal(false);
-        }}
-        onSuccess={() => {
-          console.log('Modal success');
-          setShowSellModal(false);
-          router.refresh();
-        }}
-      />
+      isOpen={showSellModal} 
+      onClose={() => {
+        console.log('Closing modal');
+        setShowSellModal(false);
+      }}
+      onSuccess={() => {
+        console.log('Modal success');
+        setShowSellModal(false);
+        onProductCreated?.(); // Call this first to update parent state
+        router.refresh(); // Then refresh the page
+      }}
+    />
     </nav>
   );
 }

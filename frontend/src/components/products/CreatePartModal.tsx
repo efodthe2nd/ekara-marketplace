@@ -91,34 +91,16 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
     setError('');
   
     try {
-      // Validate required fields
-      const requiredFields = [
-        'name', 
-        'description', 
-        'price', 
-        'manufacturer', 
-        'category',
-        'compatibility',
-        'dimensions',
-        'weight',
-        'warranty',
-        'stock'
-      ] as const;
-  
-      const missingFields = requiredFields.filter(field => !formData[field]);
-      if (missingFields.length > 0) {
-        setError(`Required fields missing: ${missingFields.join(', ')}`);
-        setIsLoading(false);
-        return;
-      }
-  
-      // Convert data to match backend expectations
+      //create new form object
+      const formDataToSend = new FormData();
+
+      
+      // Add product data as a JSON string
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
         manufacturer: formData.manufacturer.trim(),
-        images: [], // We'll handle images later
         category: formData.category.trim(),
         compatibility: formData.compatibility.trim(),
         dimensions: formData.dimensions.trim(),
@@ -127,59 +109,48 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
         stock: Number(formData.stock),
         condition: formData.condition
       };
+      //Log what we're seeing
+      console.log('Product Data:', productData);
+      console.log('Images:', images);
   
-      // Log the exact data being sent
-      console.log('Sending product data:', JSON.stringify(productData, null, 2));
+      //add the data to the new form object
+      formDataToSend.append('productData', JSON.stringify(productData));
+  
+      // Add images
+      images.forEach((image) => {
+        formDataToSend.append('images', image);
+      });
+
+      for (const pair of formDataToSend.entries()) {
+        console.log(pair[0], pair[1]);
+      }
   
       const response = await fetch('http://localhost:3000/api/products', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(productData)
+        body: formDataToSend
       });
+
+      // Log the full response
+    console.log('Response status:', response.status);
+    const responseData = await response.json();
+    console.log('Response data:', responseData);
   
-      const responseData = await response.json();
-      
       if (!response.ok) {
-        console.error('Server response:', responseData);
-        throw new Error(responseData.message || 'Failed to create product');
-      }
-  
-      console.log('Product created successfully:', responseData);
-  
-      // After successful product creation, handle image upload
-      if (images.length > 0) {
-        const imageFormData = new FormData();
-        images.forEach(image => {
-          imageFormData.append('images', image);
-        });
-  
-        // Add product ID to URL if needed
-        const imageUploadResponse = await fetch(`http://localhost:3000/products/${responseData.id}/images`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: imageFormData
-        });
-  
-        if (!imageUploadResponse.ok) {
-          console.warn('Failed to upload images');
-        }
+        throw new Error('Failed to create product');
       }
   
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Full error details:', error);
+      console.error('Error creating product:', error);
       setError(error instanceof Error ? error.message : 'Failed to create product');
     } finally {
       setIsLoading(false);
     }
   };
-
   
   if (!isOpen) return null;
 
