@@ -2,6 +2,7 @@
 import { Header } from '@/components/layout/Header';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import './globals.css';
+import ClientSideWrapper from '@/lib/client/ClientSideWrapper';
 
 export default function RootLayout({
   children,
@@ -12,8 +13,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <Header />
-          {children}
+          <ClientSideWrapper>
+            <Header />
+            {children}
+          </ClientSideWrapper>
         </AuthProvider>
       </body>
     </html>

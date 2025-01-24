@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import SellPartModal from '@/components/products/CreatePartModal';
 
+
 interface DashboardHeaderProps {
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
@@ -19,13 +20,41 @@ export function DashboardHeader({
   setSearchTerm,
   onProductCreated,
 }: DashboardHeaderProps) {
+
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { loading } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Force re-render on mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    console.log('DashboardHeader mounted:', mounted);
+    console.log('DashboardHeader user:', user);
+  }, [mounted, user]);
+
+  // Add debug useEffect
+  useEffect(() => {
+    console.log('Auth state changed:', user);
+  }, [user]);
+
+    // Add this debug effect
+  useEffect(() => {
+    console.log('Current user state:', user);
+  }, [user]);
+
+  useEffect(() => {
+    console.log('DashboardHeader user state:', user);
+  }, [user]);
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -46,12 +75,28 @@ export function DashboardHeader({
 
   // Handle logout
   const handleLogout = async () => {
-    await logout();
-    router.push('/');
+    try {
+      await logout();
+      // Don't navigate here - let the AuthContext handle it
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   console.log('User seller status:', user?.isSeller);
   console.log('Modal state:', showSellModal);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  if (!isHydrated || loading) {
+    return null; // or a loading spinner
+  }
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-10">

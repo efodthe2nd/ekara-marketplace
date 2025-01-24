@@ -5,10 +5,13 @@ import { Product, ProductResponse } from '@/types/product';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Package } from 'lucide-react';
 import api from '@/lib/api/axios';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
+//import { DashboardHeader } from '@/components/layout/DashboardHeader';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { AuthAwareHeader } from '@/components/layout/AuthAwareHeader';
 
 const DashboardPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const { user, loading: authLoading } = useAuth();
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,6 +19,11 @@ const DashboardPage: React.FC = () => {
   //const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10; 
+
+  // Add auth check effect
+  useEffect(() => {
+    console.log('Dashboard auth state:', user);
+  }, [user]);
 
   const fetchProducts = useCallback(async (pageNum: number = 1) => {
     console.log('Fetching products for page:', pageNum);
@@ -77,10 +85,18 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  
   return (
     <div className="min-h-screen bg-gray-50">
-      
-      <DashboardHeader 
+      <AuthAwareHeader
         searchTerm={searchTerm} 
         setSearchTerm={setSearchTerm} 
         onProductCreated={handleProductCreated} 

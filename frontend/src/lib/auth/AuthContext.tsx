@@ -21,12 +21,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Initial hydration
+  useEffect(() => {
+    setIsHydrated(true);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  // Debugging effect
+  useEffect(() => {
+    console.log('AuthContext user state:', user);
+  }, [user]);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
+
+        if (!token || !storedUser) {
+          // If either is missing, clear everything
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          return;
+        }
   
         if (token && storedUser) {
           setUser(JSON.parse(storedUser));
@@ -40,13 +64,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     };
+    
+    if (!isHydrated) {
+      return;
+    }
+
+    if (isHydrated) {
+      checkAuth();
+    }
+
+  }, [isHydrated]);
+
   
-    checkAuth();
-  }, []);
 
   const updateUserProfile = (updates: Partial<User>) => {
     setUser((prevUser) => (prevUser ? { ...prevUser, ...updates } : prevUser));
   };
+
+  
   
   
   const login = async (email: string, password: string) => {
@@ -64,10 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
   
       const data = await response.json();
-      //console.log('Login response:', data);
+      console.log('Login response:', data);
+
+      setUser(data.user);
   
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+
+      console.log('Updated user state:', data.user);
   
       setUser(data.user);
       return data;
@@ -88,26 +127,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return data;
     } catch (error) {
       console.error('Login error:', error);
-      
-      // Check if error has a response
-      // if (error instanceof Error && 'response' in error) {
-      //   const apiError = error as { response?: { data?: ErrorResponse } };
-      //   throw new Error(
-      //     apiError.response?.data?.message || 'Login failed'
-      //   );
-      // }
   
       throw error;
     }
   };
 
-  const logout = () => {
-    // Remove token from localStorage
-    localStorage.removeItem('token');
-    // Clear user in context
-    setUser(null);
-    router.push('/');
+  const logout = async () => {
+    try {
+      // Clear all auth-related items from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Clear the user state
+      setUser(null);
+      
+      // Force a clean state
+      setLoading(true);
+      setLoading(false);
+
+      // Optional: Clear any other auth-related storage
+      sessionStorage.clear(); // If you're using session storage
+      
+      // Navigate to home page
+      router.push('/');
+      
+      // Force a page reload to clear any cached states
+      router.refresh();
+      
+      console.log('Logout completed, user state:', null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
+
+
+  // Return null during initial hydration
+  if (!isHydrated) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider

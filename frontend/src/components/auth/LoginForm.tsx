@@ -19,10 +19,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
     try {
       await login(email, password);
+      // Wait for next tick to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 0));
       onSuccess?.();
+      // Add a small delay before redirect to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
       router.push('/dashboard');
     } catch {
       setError('Invalid credentials');
