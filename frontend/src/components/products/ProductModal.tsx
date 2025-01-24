@@ -17,6 +17,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const router = useRouter();
 
   const getImageUrl = (imageName: string) => {
+
+    if (imageName.startsWith('data:image')) {
+      return imageName;
+    }
     if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
       return imageName;
     }
@@ -26,6 +30,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const imageSrc = product.images && product.images.length > 0 
     ? getImageUrl(product.images[0])
     : '/placeholder-image.jpg';
+
+    React.useEffect(() => {
+      console.log('Product in modal:', product);
+      console.log('Images:', product.images);
+      console.log('First image:', product.images?.[0]);
+    }, [product]);
 
   const handleBuyNow = () => {
     if (!user) {
