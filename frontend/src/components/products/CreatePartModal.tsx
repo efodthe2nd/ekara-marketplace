@@ -158,7 +158,7 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Sell Auto Part</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Sell Part</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -195,7 +195,7 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                className="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
               />
             </div>
             <div>
