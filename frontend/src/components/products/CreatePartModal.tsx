@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
+import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
 
 interface SellPartModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
     condition: "new",
   });
 
+  //add to form state
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
   // Image handling states
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -36,6 +40,7 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
   const [imageError, setImageError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   const validateImage = (file: File): string | null => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
@@ -107,7 +112,8 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
         weight: Number(formData.weight),
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
-        condition: formData.condition
+        condition: formData.condition,
+        categoryId: selectedCategory?.id,
       };
       //Log what we're seeing
       console.log('Product Data:', productData);
@@ -228,13 +234,17 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
               <label className="block text-sm font-medium text-gray-700">
                 Category
               </label>
-              <input
+              {/* <input
                 type="text"
                 value={formData.category}
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value })
                 }
                 className="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              /> */}
+              <CategoryAutocomplete
+                onSelect={(category) => setSelectedCategory(category)}
+                initialValue={formData.category}
               />
             </div>
             <div>

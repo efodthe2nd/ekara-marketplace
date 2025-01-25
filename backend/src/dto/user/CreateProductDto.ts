@@ -18,8 +18,8 @@ export class CreateProductDto {
     @IsArray()
     images?: string[];
 
-    @IsString()
-    category: string;
+    @IsNumber()
+    categoryId: number;
 
     @IsString()
     compatibility: string;

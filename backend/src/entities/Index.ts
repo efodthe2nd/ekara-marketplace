@@ -7,3 +7,4 @@ export { User } from './User';
 export { OrderItem } from './OrderItem';
 export { BidListing } from './BidListing';
 export { Bid } from './Bid';
+export { Category } from './Category';

@@ -23,8 +23,8 @@ export class UpdateProductDto {
   images?: string[];
 
   @IsOptional()
-  @IsString()
-  category?: string;
+  @IsNumber()
+  categoryId?: number;
 
   @IsOptional()
   @IsString()

@@ -8,8 +8,11 @@ export interface ProductRepositoryCustom extends Repository<Product> {
   
 
 export const productRepositoryMethods = {
-    async findByCategory(this: Repository<Product>, category: string): Promise<Product[]> {
-        return this.find({ where: { category } });
+    async findByCategory(this: Repository<Product>, category: string) {
+        return this.createQueryBuilder('product')
+            .leftJoinAndSelect('product.category', 'category')
+            .where('category.name = :category', { category })
+            .getMany();
     },
 
     async findByManufacturer(this: Repository<Product>, manufacturer: string): Promise<Product[]> {
@@ -32,3 +35,7 @@ export const productRepositoryMethods = {
         });
     }
 };
+
+export interface ProductRepositoryCustom {
+    findByCategory(category: string): Promise<Product[]>;
+}

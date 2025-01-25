@@ -8,8 +8,10 @@ import * as Entities from './entities';
 import { UserController } from './controllers/UserController';
 import { ProductService } from './services/ProductService';
 import { OrderService } from './services/OrderService';
+import { CategoryService } from './services/CategoryService';
 import { OrderController } from './controllers/OrderController';
 import { ProductController } from './controllers/ProductController';
+import { CategoryController } from './controllers/CategoryController';
 import { productRepositoryMethods } from './entities/product.repository';
 import { Repository } from 'typeorm';
 import { ProductRepositoryCustom } from './entities/product.repository';
@@ -69,11 +71,20 @@ async function initializeApp() {
             AppDataSource.getRepository(Entities.SellerProfile)
         );
 
+        const categoryService = new CategoryService(
+            AppDataSource.getRepository(Entities.Category));
+        
+
         // Initialize services
         
         const orderService = new OrderService(
             AppDataSource.getRepository(Entities.Order),
             AppDataSource.getRepository(Entities.OrderItem),
+            AppDataSource.getRepository(Entities.Product)
+        );
+        const bidService = new BidService(
+            AppDataSource.getRepository(Entities.BidListing),
+            AppDataSource.getRepository(Entities.Bid),
             AppDataSource.getRepository(Entities.Product)
         );
 
@@ -84,47 +95,47 @@ async function initializeApp() {
         const userController = new UserController(userService);
         const productController = new ProductController(productService);
         const orderController = new OrderController(orderService);
-
-        const bidService = new BidService(
-            AppDataSource.getRepository(Entities.BidListing),
-            AppDataSource.getRepository(Entities.Bid),
-            AppDataSource.getRepository(Entities.Product)
-        );
+        const categoryController = new CategoryController(categoryService);
+        
         const bidController = new BidController(bidService);
         console.log("Controllers Initialized"); 
         
         // Initialize bid scheduler
         initializeBidScheduler(bidService);
-
-
+        
+        
         app.use((req, res, next) => {
             console.log(`${req.method} ${req.path}`);
             console.log('Headers:', req.headers);
             console.log('Body:', req.body);
             next();
         });
-
+        
         // Initialize routes
         console.log("About to initialize routes...");
-        const appRouter = AppRouter(userController, productController, orderController, bidController);
-        app.use('/api', appRouter);
-
-        // Error handling middleware
-        app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-            console.error(err.stack);
-            res.status(500).json({ message: 'Something went wrong!' });
-        });
-
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            console.error("Error during initialization:", error.message);
-            console.error("Detailed error:", error.stack);
-        } else {
-            console.error("An unknown error occurred:", error);
+        const appRouter = AppRouter(
+            userController, productController, categoryController
+            //orderController, 
+            //bidController, 
+            );
+            app.use('/api', appRouter);
+            
+            // Error handling middleware
+            app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+                console.error(err.stack);
+                res.status(500).json({ message: 'Something went wrong!' });
+            });
+            
+            const PORT = process.env.PORT || 3000;
+            app.listen(PORT, () => {
+                console.log(`Server is running on port ${PORT}`);
+            });
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error("Error during initialization:", error.message);
+                console.error("Detailed error:", error.stack);
+            } else {
+                console.error("An unknown error occurred:", error);
         }
         process.exit(1);
     }

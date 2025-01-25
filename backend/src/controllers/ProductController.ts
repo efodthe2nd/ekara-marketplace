@@ -4,6 +4,7 @@ import * as path from "path";
 import { promisify } from 'util';
 import { ProductService } from "../services/ProductService";
 import { CreateProductDto } from "../dto/user/CreateProductDto";
+import { Product } from "../entities/Product";
 import { UpdateProductDto } from "../dto/user/UpdateProductDto";
 import {
   authMiddleware,
@@ -101,10 +102,18 @@ createProduct = async (req: Request, res: Response): Promise<void> => {
 
   public updateProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-      const productDto: UpdateProductDto = req.body;
+      const updateDto: UpdateProductDto = req.body;
+      // Convert the DTO to match what the service expects
+      const productUpdateData: Partial<Product> = {
+        ...updateDto,
+        // If categoryId is provided, it will be used directly
+        // Remove any category string if it exists in the request
+        category: undefined
+      };
+  
       const product = await this.productService.updateProduct(
         Number(req.params.id),
-        productDto
+        productUpdateData
       );
       res.json(product);
     } catch (error: any) {

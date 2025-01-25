@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { SellerProfile } from './SellerProfile';
+import { Category } from './Category';
+import { JoinColumn as TypeORMJoinColumn } from 'typeorm';
 
 @Entity('products')
 export class Product {
@@ -24,8 +26,9 @@ export class Product {
     @ManyToOne(() => SellerProfile, seller => seller.products)
     seller: SellerProfile;
 
-    @Column()
-    category: string;
+    @ManyToOne(() => Category, (category) => category.products)
+    @JoinColumn({ name: 'categoryId' })
+    category: Category;
 
     @Column()
     compatibility: string;
@@ -47,4 +50,9 @@ export class Product {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @Column({ nullable: true })
+    categoryId: number;
 }
+
+

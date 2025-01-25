@@ -38,6 +38,7 @@ export class ProductService {
       // Create product directly with the data
       const newProduct = this.productRepository.create({
         ...productData,
+        categoryId: productData.categoryId, 
         seller: sellerProfile,
         images: productData.images || [] // Ensure images is always an array
       });
@@ -68,22 +69,25 @@ export class ProductService {
     });
   }
 
-  async updateProduct(
-    id: number,
-    updateProductDto: UpdateProductDto
-  ): Promise<Product> {
-    const existingProduct = await this.getProductById(id);
-    if (!existingProduct) {
-      throw new Error("Product not found");
-    }
-
-    this.validateProductUpdate(updateProductDto);
-
-    const updatedProduct = this.productRepository.merge(existingProduct, {
-      ...updateProductDto,
-      updatedAt: new Date(),
+  async updateProduct(id: number, updateProductDto: Partial<Product>): Promise<Product> {
+    const existingProduct = await this.productRepository.findOne({ 
+      where: { id },
+      relations: ['category'] // Add this to load the category relation
     });
-
+  
+    if (!existingProduct) {
+      throw new Error('Product not found');
+    }
+  
+    // Extract category and create a clean DTO
+    const { category, ...cleanUpdateDto } = updateProductDto;
+  
+    // Create the merged product without category
+    const updatedProduct = this.productRepository.merge(existingProduct, {
+      ...cleanUpdateDto,
+      updatedAt: new Date()
+    });
+  
     return this.productRepository.save(updatedProduct);
   }
 

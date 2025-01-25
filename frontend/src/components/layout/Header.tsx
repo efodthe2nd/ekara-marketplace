@@ -9,12 +9,22 @@ export function Header() {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const handleLogout = () => {
     logout();
   };
 
   const pathname = usePathname();
+
+  // Add this debug effect
+  useEffect(() => {
+    console.log('Current user state:', user);
+  }, [user]);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,6 +39,10 @@ export function Header() {
 
   if (pathname === "/dashboard") {
     return null;
+  }
+
+  if (!isHydrated) {
+    return null; // or a loading spinner
   }
 
   return (
