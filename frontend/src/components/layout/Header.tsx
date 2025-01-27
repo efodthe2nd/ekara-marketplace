@@ -37,7 +37,7 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (pathname !== "/" && pathname !== "/settings") {
+  if (pathname !== "/" && pathname !== "/settings" && pathname !== "/profile") {
     return null;
   }
 

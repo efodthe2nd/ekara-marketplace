@@ -97,19 +97,6 @@ export class UserService {
     );
   }
 
-  async getUserById(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-      relations: ["buyerProfile", "sellerProfile"],
-    });
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    return user;
-  }
-
   async updateUserRole(
     userId: number,
     newRole: "buyer" | "seller"
@@ -140,10 +127,28 @@ export class UserService {
   }
 
   // Add to UserService class
-  async updateProfilePicture(userId: number, filePath: string): Promise<User> {
+  async updateProfilePicture(userId: number, imageData: string): Promise<User> {
     const user = await this.getUserById(userId);
-    user.profilePicture = filePath;
-    return this.userRepository.save(user);
+    
+    // Update the profile picture
+    user.profilePicture = imageData;
+    
+    // Save and return the updated user
+    const updatedUser = await this.userRepository.save(user);
+    return updatedUser;
+  }
+
+  async getUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ["buyerProfile", "sellerProfile"],
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
   }
 
   // Add this method to UserService class

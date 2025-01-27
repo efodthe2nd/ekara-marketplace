@@ -209,37 +209,40 @@ export class UserController {
     }
   };
 
-  // Add to UserController class
   uploadProfilePicture = async (req: AuthRequest, res: Response) => {
     try {
-      if (!req.user || !req.file) {
-        return res.status(400).json({
-          message: 'No user or file provided'
+        console.log('Request body:', req.body);  // Debug log
+        
+        if (!req.user || !req.body.profilePicture) {
+            console.log('User:', req.user);  // Debug log
+            console.log('Profile picture exists:', !!req.body.profilePicture);  // Debug log
+            return res.status(400).json({
+                message: 'No user or profile picture provided'
+            });
+        }
+
+        const userId = req.user.id;
+        const base64Image = req.body.profilePicture;
+
+        // Update user with new profile picture
+        const updatedUser = await this.userService.updateProfilePicture(userId, base64Image);
+
+        // Remove password from response
+        const { password, ...userWithoutPassword } = updatedUser;
+
+        res.json({
+            message: 'Profile picture updated successfully',
+            user: userWithoutPassword,
+            profilePicUrl: base64Image
         });
-      }
-
-      const userId = req.user.id;
-      const filePath = req.file.path.replace(/\\/g, '/'); // Ensure forward slashes
-
-      // Update user with new profile picture path
-      const updatedUser = await this.userService.updateProfilePicture(userId, filePath);
-      
-      // Remove password from response
-      const { password, ...userWithoutPassword } = updatedUser;
-
-      res.json({
-        message: 'Profile picture updated successfully',
-        profilePicUrl: filePath, // Ensure profilePicUrl is returned
-        user: userWithoutPassword
-      });
     } catch (error: any) {
-      res.status(400).json({
-        message: error.message || 'Error uploading profile picture'
-      });
+        console.error('Error uploading profile picture:', error);
+        res.status(400).json({
+            message: error.message || 'Error uploading profile picture'
+        });
     }
-  };
-
-  // src/controllers/UserController.ts
+};
+  
 updateLocation = async (req: AuthRequest, res: Response) => {
     try {
         if (!req.user) {

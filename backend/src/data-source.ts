@@ -6,9 +6,6 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
-// Construct the path to entities directory
-const entitiesPath = path.join(__dirname, 'entities', '*.ts');
-
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -16,18 +13,22 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'marketplace',
-  synchronize: true, // set to false in production
+  synchronize: false, // Changed to false to use migrations instead
   logging: true,
-  entities: [entitiesPath],
-  migrations: [],
+  entities: [path.join(__dirname, 'entities', '**', '*.{ts,js}')],
+  migrations: [path.join(__dirname, 'migrations', '**', '*.{ts,js}')],
   subscribers: [],
 });
 
-// Initialize the data source
-AppDataSource.initialize()
-  .then(() => {
-    console.log('Data Source has been initialized!');
-  })
-  .catch((err) => {
-    console.error('Error during Data Source initialization', err);
-  });
+// Only initialize if this file is being run directly
+if (require.main === module) {
+  AppDataSource.initialize()
+    .then(() => {
+      console.log('Data Source has been initialized!');
+    })
+    .catch((err) => {
+      console.error('Error during Data Source initialization', err);
+    });
+}
+
+export default AppDataSource;

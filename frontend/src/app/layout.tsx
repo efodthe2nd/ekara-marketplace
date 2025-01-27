@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import './globals.css';
 import ClientSideWrapper from '@/lib/client/ClientSideWrapper';
+//import { DashboardHeader } from '@/components/layout/DashboardHeader';
 
 export default function RootLayout({
   children,

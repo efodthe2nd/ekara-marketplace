@@ -1,5 +1,5 @@
 // src/middleware/upload.middleware.ts
-import multer from 'multer';
+import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 
 const storage = multer.diskStorage({
@@ -27,7 +27,6 @@ export const uploadProfilePicture = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 }).single('profilePicture');
-
 
 export const upload = multer({
   storage: multer.memoryStorage(),

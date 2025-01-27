@@ -16,6 +16,7 @@ import {
   Edit,
   Check
 } from "lucide-react";
+//import { DashboardHeader } from "@/components/layout/DashboardHeader";
 
 // Mock data for products
 const mockProducts = [
@@ -115,62 +116,47 @@ const ProfilePage = () => {
       pixelCrop.height
     );
   
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      if (!blob) {
-        console.error('Blob is null');
-        return;
-      }
+    setIsUploading(true);
+    setUploadError('');
+    setShowCropModal(false);
   
-      setIsUploading(true);
-      setUploadError('');
-      setShowCropModal(false);
-  
-      try {
-        const formData = new FormData();
-        formData.append('profilePicture', blob, 'profile.jpg');
-  
-        const response = await fetch('http://localhost:3000/api/auth/profile/picture', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: formData,
-        });
-  
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Response error text:', errorText);
-          throw new Error('Failed to upload profile picture');
-        }
-  
-        const data = await response.json();
-        if (data.profilePicUrl) {
-          const profilePicUrl = data.profilePicUrl.replace(/\\/g, '/');
-          updateUserProfile({ profilePicture: profilePicUrl });
-  
-          // Fetch latest user data after updating PFP
-          const userResponse = await fetch('http://localhost:3000/api/auth/profile', {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          });
-          const userData = await userResponse.json();
-          updateUserProfile(userData); // Update state with latest data
-        } else {
-          throw new Error('Profile picture URL is missing in the response');
-        }
-      } catch (error) {
-        console.error('Upload error:', error);
-        setUploadError('Failed to upload profile picture');
-      } finally {
-        setIsUploading(false);
-        URL.revokeObjectURL(selectedFile);
-        setSelectedFile(null);
-      }
-    }, 'image/jpeg', 0.95);
-  };
+    try {
+      // Convert canvas to base64
+      const base64Image = canvas.toDataURL('image/jpeg');
 
+      const response = await fetch('http://localhost:3000/api/auth/profile/picture', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          profilePicture: base64Image
+        })
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error text:', errorText);
+        throw new Error('Failed to upload profile picture');
+      }
+  
+      const data = await response.json();
+      if (data.profilePicUrl) {
+        updateUserProfile({ profilePicture: data.profilePicUrl });
+      } else {
+        throw new Error('Profile picture URL is missing in the response');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+      URL.revokeObjectURL(selectedFile);
+      setSelectedFile(null);
+    }
+  };
+  
   const handleSaveLocation = async () => {
     try {
       const response = await fetch('http://localhost:3000/api/auth/profile/location', {
@@ -198,6 +184,7 @@ const ProfilePage = () => {
   };
 
   return (
+    
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
@@ -210,7 +197,7 @@ const ProfilePage = () => {
                   <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden relative">
                     {user?.profilePicture ? (
                       <Image
-                        src={`http://localhost:3000/${user.profilePicture}`}
+                        src={user.profilePicture}
                         alt="Profile"
                         width={96}
                         height={96}

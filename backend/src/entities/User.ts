@@ -35,8 +35,8 @@ export class User {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @Column({ nullable: true })
-    profilePicture: string;
+    @Column({ type: 'text', nullable: true })
+    profilePicture?: string;
 
     @OneToOne(() => BuyerProfile, (buyerProfile) => buyerProfile.user)
     buyerProfile: BuyerProfile;
