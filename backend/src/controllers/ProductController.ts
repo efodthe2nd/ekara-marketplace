@@ -64,28 +64,33 @@ createProduct = async (req: Request, res: Response): Promise<void> => {
   }
 };
   
-  public getProducts = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { search, category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+public getProducts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { 
+      search, 
+      category, 
+      minPrice, 
+      maxPrice, 
+      page = 1, 
+      limit = 10 
+    } = req.query;
 
-      if (search) {
-        const products = await this.productService.searchProducts(search as string);
-        res.json(products);
-        return;
+    const result = await this.productService.listProducts(
+      Number(page),
+      Number(limit),
+      {
+        category: category as string,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        search: search as string
       }
+    );
 
-      const result = await this.productService.listProducts(
-        Number(page),
-        Number(limit),
-        category as string,
-        minPrice ? Number(minPrice) : undefined,
-        maxPrice ? Number(maxPrice) : undefined
-      );
-      res.json(result);
-    } catch (error: any) {
-      res.status(400).json({ message: error?.message || "An error occurred" });
-    }
-  };
+    res.json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error?.message || "An error occurred" });
+  }
+};
 
   public getProduct = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -147,6 +152,34 @@ createProduct = async (req: Request, res: Response): Promise<void> => {
     } catch (error: any) {
       console.error('Image upload error:', error);
       res.status(500).json({ message: error?.message || "Image upload failed" });
+    }
+  };
+
+  public getSuggestions = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string') {
+        res.json({ suggestions: [] });
+        return;
+      }
+      const suggestions = await this.productService.suggestProducts(query);
+      res.json({ suggestions });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching suggestions' });
+    }
+  };
+  
+  public searchProducts = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { query, page = 1, limit = 10 } = req.query;
+      if (!query || typeof query !== 'string') {
+        res.status(400).json({ message: 'Search query is required' });
+        return;
+      }
+      const result = await this.productService.searchProducts(query, Number(page), Number(limit));
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: 'Error searching products' });
     }
   };
   

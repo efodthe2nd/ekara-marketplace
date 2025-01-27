@@ -98,40 +98,55 @@ export class ProductService {
     }
   }
 
-  async listProducts(
-    page: number = 1,
-    limit: number = 10,
-    category?: string,
-    minPrice?: number,
-    maxPrice?: number
-  ): Promise<{ products: Product[]; total: number }> {
-    const queryBuilder = this.productRepository.createQueryBuilder("product");
+  // In ProductService.ts
+async listProducts(
+  page: number = 1,
+  limit: number = 10,
+  filters?: {
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    search?: string;
+  }
+): Promise<{ products: Product[]; total: number }> {
+  const queryBuilder = this.productRepository
+    .createQueryBuilder("product")
+    .leftJoinAndSelect("product.seller", "seller");
 
-    if (category) {
-      queryBuilder.andWhere("product.category = :category", { category });
-    }
-
-    if (minPrice !== undefined) {
-      queryBuilder.andWhere("product.price >= :minPrice", { minPrice });
-    }
-
-    if (maxPrice !== undefined) {
-      queryBuilder.andWhere("product.price <= :maxPrice", { maxPrice });
-    }
-
-    const total = await queryBuilder.getCount();
-
-    const products = await queryBuilder
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    return { products, total };
+  if (filters?.category) {
+    queryBuilder.andWhere("product.category = :category", { 
+      category: filters.category 
+    });
   }
 
-  async searchProducts(query: string): Promise<Product[]> {
-    return this.productRepository.searchProducts(query);
+  if (filters?.minPrice !== undefined) {
+    queryBuilder.andWhere("product.price >= :minPrice", { 
+      minPrice: filters.minPrice 
+    });
   }
+
+  if (filters?.maxPrice !== undefined) {
+    queryBuilder.andWhere("product.price <= :maxPrice", { 
+      maxPrice: filters.maxPrice 
+    });
+  }
+
+  if (filters?.search) {
+    queryBuilder.andWhere(
+      "(LOWER(product.name) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))",
+      { search: `%${filters.search}%` }
+    );
+  }
+
+  const total = await queryBuilder.getCount();
+  const products = await queryBuilder
+    .orderBy("product.createdAt", "DESC")
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getMany();
+
+  return { products, total };
+}
 
   private validateProductInput(productData: CreateProductDto): void {
     if (!productData.name) {
@@ -193,4 +208,32 @@ export class ProductService {
     product.images = [...(product.images || []), ...imageUrls];
     return this.productRepository.save(product);
   }
+
+  async suggestProducts(query: string, limit: number = 5): Promise<Product[]> {
+    return this.productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.seller", "seller")
+      .where("LOWER(product.name) LIKE LOWER(:query)", { query: `%${query}%` })
+      .orWhere("LOWER(product.description) LIKE LOWER(:query)", { query: `%${query}%` })
+      .take(limit)
+      .getMany();
+  }
+  
+  async searchProducts(query: string, page: number = 1, limit: number = 10): Promise<{ products: Product[]; total: number }> {
+    const queryBuilder = this.productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.seller", "seller")
+      .where("LOWER(product.name) LIKE LOWER(:query)", { query: `%${query}%` })
+      .orWhere("LOWER(product.description) LIKE LOWER(:query)", { query: `%${query}%` });
+  
+    const total = await queryBuilder.getCount();
+    const products = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+  
+    return { products, total };
+  }
+
+  
 }

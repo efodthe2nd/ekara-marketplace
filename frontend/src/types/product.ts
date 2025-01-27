@@ -32,4 +32,5 @@ export interface Product {
 export interface ProductResponse {
   products: Product[];
   total: number;
+  isSearch?: boolean;
 }

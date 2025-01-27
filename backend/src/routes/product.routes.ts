@@ -10,6 +10,8 @@ export const productRouter = (productController: ProductController): Router => {
   console.log('Registering product routes...');
   
   router.get('/', productController.getProducts as RequestHandler);
+  router.get('/suggestions', productController.getSuggestions as RequestHandler);
+  router.get('/search', productController.searchProducts as RequestHandler);
   router.get('/:id', productController.getProduct as RequestHandler);
   router.post(
     '/',
