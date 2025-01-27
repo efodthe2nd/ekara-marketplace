@@ -56,7 +56,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="p-4">
           <div className="mb-2">
             <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">
-              {product.category}
+            {product.categoryRelation?.name || 'Uncategorized'}
             </span>
           </div>
           

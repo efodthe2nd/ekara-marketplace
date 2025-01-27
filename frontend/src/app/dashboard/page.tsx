@@ -1,37 +1,43 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { Product, ProductResponse } from '@/types/product';
-import { ProductCard } from '@/components/products/ProductCard';
-import { Package } from 'lucide-react';
-import api from '@/lib/api/axios';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
+import { useState, useCallback, useEffect } from "react";
+import { Product, ProductResponse } from "@/types/product";
+import { ProductCard } from "@/components/products/ProductCard";
+import { Package } from "lucide-react";
+import api from "@/lib/api/axios";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { useRouter } from "next/navigation";
+
+
 
 const DashboardPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
+  const router = useRouter();
 
   const fetchProducts = useCallback(async (pageNum: number = 1) => {
     try {
       setLoading(true);
-      const response = await api.get<ProductResponse>(`/api/products?page=${pageNum}&limit=${limit}`);
-      
+      const response = await api.get<ProductResponse>(
+        `api/products?page=${pageNum}&limit=${limit}`
+      );
+
       if (response.data && Array.isArray(response.data.products)) {
         if (pageNum === 1) {
           setProducts(response.data.products);
         } else {
-          setProducts(prev => [...prev, ...response.data.products]);
+          setProducts((prev) => [...prev, ...response.data.products]);
         }
         setHasMore(response.data.products.length === limit);
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Failed to fetch products', error);
+      console.error("Failed to fetch products", error);
     } finally {
       setLoading(false);
     }
@@ -43,14 +49,14 @@ const DashboardPage = () => {
       const response = await api.get<ProductResponse>(
         `/api/products/search?query=${encodeURIComponent(query)}&limit=${limit}`
       );
-      
+
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(response.data.products);
         setHasMore(response.data.products.length === limit);
         setPage(1);
       }
     } catch (error) {
-      console.error('Failed to search products:', error);
+      console.error("Failed to search products:", error);
     } finally {
       setLoading(false);
     }
@@ -62,11 +68,16 @@ const DashboardPage = () => {
     try {
       setLoadingMore(true);
       const nextPage = page + 1;
-      const baseUrl = searchTerm 
-        ? `/api/products/search?query=${encodeURIComponent(searchTerm)}`
-        : '/api/products';
-      
-      const response = await api.get<ProductResponse>(`${baseUrl}&page=${nextPage}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: nextPage.toString(),
+        limit: limit.toString()
+      });
+  
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+  
+      const response = await api.get<ProductResponse>(`/api/products?${params}`);
       
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(prev => [...prev, ...response.data.products]);
@@ -80,6 +91,7 @@ const DashboardPage = () => {
     }
   };
 
+  
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -88,18 +100,18 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       setSearchTerm(selectedProduct.name);
-      
+
       const response = await api.get<ProductResponse>(
         `/api/products/search?query=${encodeURIComponent(selectedProduct.name)}&limit=${limit}`
       );
-      
+
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(response.data.products);
         setHasMore(response.data.products.length === limit);
         setPage(1);
       }
     } catch (error) {
-      console.error('Failed to fetch related products:', error);
+      console.error("Failed to fetch related products:", error);
     } finally {
       setLoading(false);
     }
@@ -140,11 +152,27 @@ const DashboardPage = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Engine Parts', 'Computer Accessories', 'Transmission', 'Electronics'].map((category) => (
+            {[
+              "Engine Parts",
+              "Computer Accessories",
+              "Transmission",
+              "Electronics",
+            ].map((category) => (
               <div
                 key={category}
                 className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleSearch(category)}
+                onClick={() => {
+                  if (category === "Engine Parts") {
+                    router.push("/categories/engine-parts");
+                  }else if (category === 'Computer Accessories') {
+                    router.push('/categories/computer-accessories');
+                  }else if (category === 'Transmission') {
+                    router.push('/categories/transmission');
+                  }else if (category === 'Electronics') {
+                    router.push('/categories/electronics');
+                  }
+                  // Add other category routes as needed
+                }}
               >
                 <Package className="h-8 w-8 text-blue-600 mb-2" />
                 <h3 className="font-medium text-gray-900">{category}</h3>
@@ -158,7 +186,7 @@ const DashboardPage = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-900">
-              {searchTerm ? 'Search Results' : 'Featured Products'}
+              {searchTerm ? "Search Results" : "Featured Products"}
             </h2>
           </div>
           {products.length > 0 ? (
@@ -175,7 +203,7 @@ const DashboardPage = () => {
                     disabled={loadingMore}
                     className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {loadingMore ? 'Loading...' : 'Load More Products'}
+                    {loadingMore ? "Loading..." : "Load More Products"}
                   </button>
                 </div>
               )}

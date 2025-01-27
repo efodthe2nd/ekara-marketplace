@@ -7,7 +7,6 @@ import { productRepositoryMethods } from "../entities/product.repository";
 import fs from "fs";
 import path from "path";
 
-
 export interface ProductRepositoryCustom extends Repository<Product> {
   searchProducts(query: string): Promise<Product[]>;
 }
@@ -21,7 +20,10 @@ export class ProductService {
   }
 
   // src/services/ProductService.ts
-  async createProduct(productData: Partial<Product>, userId: number): Promise<Product> {
+  async createProduct(
+    productData: Partial<Product>,
+    userId: number
+  ): Promise<Product> {
     try {
       const sellerProfile = await this.sellerRepository.findOne({
         where: {
@@ -30,22 +32,22 @@ export class ProductService {
           },
         },
       });
-  
+
       if (!sellerProfile) {
         throw new Error("Seller profile not found");
       }
-  
+
       // Create product directly with the data
       const newProduct = this.productRepository.create({
         ...productData,
-        categoryId: productData.categoryId, 
+        categoryId: productData.categoryId,
         seller: sellerProfile,
-        images: productData.images || [] // Ensure images is always an array
+        images: productData.images || [], // Ensure images is always an array
       });
-  
+
       return this.productRepository.save(newProduct);
     } catch (error) {
-      console.error('Error in createProduct service:', error);
+      console.error("Error in createProduct service:", error);
       throw error;
     }
   }
@@ -69,25 +71,28 @@ export class ProductService {
     });
   }
 
-  async updateProduct(id: number, updateProductDto: Partial<Product>): Promise<Product> {
-    const existingProduct = await this.productRepository.findOne({ 
+  async updateProduct(
+    id: number,
+    updateProductDto: Partial<Product>
+  ): Promise<Product> {
+    const existingProduct = await this.productRepository.findOne({
       where: { id },
-      relations: ['category'] // Add this to load the category relation
+      relations: ["category"], // Add this to load the category relation
     });
-  
+
     if (!existingProduct) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
-  
+
     // Extract category and create a clean DTO
     const { category, ...cleanUpdateDto } = updateProductDto;
-  
+
     // Create the merged product without category
     const updatedProduct = this.productRepository.merge(existingProduct, {
       ...cleanUpdateDto,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
-  
+
     return this.productRepository.save(updatedProduct);
   }
 
@@ -98,55 +103,68 @@ export class ProductService {
     }
   }
 
-  // In ProductService.ts
-async listProducts(
-  page: number = 1,
-  limit: number = 10,
-  filters?: {
-    category?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    search?: string;
+  async listProducts(
+    page: number = 1,
+    limit: number = 10,
+    filters?: {
+      category?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      search?: string;
+    }
+  ): Promise<{ products: Product[]; total: number }> {
+    const queryBuilder = this.productRepository
+      .createQueryBuilder("product")
+      .leftJoinAndSelect("product.seller", "seller")
+      .leftJoinAndSelect("product.categoryRelation", "category");
+
+    if (filters?.category) {
+      queryBuilder.andWhere("LOWER(category.name) = LOWER(:category)", {
+        category: filters.category,
+      });
+    }
+
+    // if (filters?.category) {
+    //   queryBuilder.andWhere("LOWER(category.name) = LOWER(:category)", {
+    //     category: filters.category.replace(/-/g, " "), // Convert "engine-parts" to "engine parts"
+    //   });
+    // }
+
+    if (filters?.minPrice !== undefined) {
+      queryBuilder.andWhere("product.price >= :minPrice", {
+        minPrice: filters.minPrice,
+      });
+    }
+
+    if (filters?.maxPrice !== undefined) {
+      queryBuilder.andWhere("product.price <= :maxPrice", {
+        maxPrice: filters.maxPrice,
+      });
+    }
+
+    if (filters?.search) {
+      queryBuilder.andWhere(
+        "(LOWER(product.name) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))",
+        { search: `%${filters.search}%` }
+      );
+    }
+
+    // Get total before pagination
+    const total = await queryBuilder.getCount();
+
+    // Get paginated results
+    const products = await queryBuilder
+      .orderBy("product.createdAt", "DESC")
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    // Return products as is, with their relations
+    return {
+      products,
+      total,
+    };
   }
-): Promise<{ products: Product[]; total: number }> {
-  const queryBuilder = this.productRepository
-    .createQueryBuilder("product")
-    .leftJoinAndSelect("product.seller", "seller");
-
-  if (filters?.category) {
-    queryBuilder.andWhere("product.category = :category", { 
-      category: filters.category 
-    });
-  }
-
-  if (filters?.minPrice !== undefined) {
-    queryBuilder.andWhere("product.price >= :minPrice", { 
-      minPrice: filters.minPrice 
-    });
-  }
-
-  if (filters?.maxPrice !== undefined) {
-    queryBuilder.andWhere("product.price <= :maxPrice", { 
-      maxPrice: filters.maxPrice 
-    });
-  }
-
-  if (filters?.search) {
-    queryBuilder.andWhere(
-      "(LOWER(product.name) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))",
-      { search: `%${filters.search}%` }
-    );
-  }
-
-  const total = await queryBuilder.getCount();
-  const products = await queryBuilder
-    .orderBy("product.createdAt", "DESC")
-    .skip((page - 1) * limit)
-    .take(limit)
-    .getMany();
-
-  return { products, total };
-}
 
   private validateProductInput(productData: CreateProductDto): void {
     if (!productData.name) {
@@ -194,14 +212,17 @@ async listProducts(
     return product.stock > 0;
   }
 
-  async updateProductImages(productId: number, imageUrls: string[]): Promise<Product> {
-    const product = await this.productRepository.findOne({ 
+  async updateProductImages(
+    productId: number,
+    imageUrls: string[]
+  ): Promise<Product> {
+    const product = await this.productRepository.findOne({
       where: { id: productId },
-      relations: ['seller'] 
+      relations: ["seller"],
     });
-    
+
     if (!product) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
 
     // Merge new images with existing ones
@@ -214,26 +235,32 @@ async listProducts(
       .createQueryBuilder("product")
       .leftJoinAndSelect("product.seller", "seller")
       .where("LOWER(product.name) LIKE LOWER(:query)", { query: `%${query}%` })
-      .orWhere("LOWER(product.description) LIKE LOWER(:query)", { query: `%${query}%` })
+      .orWhere("LOWER(product.description) LIKE LOWER(:query)", {
+        query: `%${query}%`,
+      })
       .take(limit)
       .getMany();
   }
-  
-  async searchProducts(query: string, page: number = 1, limit: number = 10): Promise<{ products: Product[]; total: number }> {
+
+  async searchProducts(
+    query: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ products: Product[]; total: number }> {
     const queryBuilder = this.productRepository
       .createQueryBuilder("product")
       .leftJoinAndSelect("product.seller", "seller")
       .where("LOWER(product.name) LIKE LOWER(:query)", { query: `%${query}%` })
-      .orWhere("LOWER(product.description) LIKE LOWER(:query)", { query: `%${query}%` });
-  
+      .orWhere("LOWER(product.description) LIKE LOWER(:query)", {
+        query: `%${query}%`,
+      });
+
     const total = await queryBuilder.getCount();
     const products = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
       .getMany();
-  
+
     return { products, total };
   }
-
-  
 }

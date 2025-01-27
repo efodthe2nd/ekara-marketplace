@@ -106,14 +106,14 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
         description: formData.description.trim(),
         price: Number(formData.price),
         manufacturer: formData.manufacturer.trim(),
-        category: formData.category.trim(),
+        category: selectedCategory?.name || "",
+        categoryId: selectedCategory?.id,
         compatibility: formData.compatibility.trim(),
         dimensions: formData.dimensions.trim(),
         weight: Number(formData.weight),
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
-        condition: formData.condition,
-        categoryId: selectedCategory?.id,
+        condition: formData.condition
       };
       //Log what we're seeing
       console.log('Product Data:', productData);

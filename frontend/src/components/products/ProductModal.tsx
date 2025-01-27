@@ -74,7 +74,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             {/* Category Badge */}
             <div className="mb-4">
               <span className="bg-blue-50 text-blue-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
-                {product.category}
+              {product.categoryRelation?.name || 'Uncategorized'}
               </span>
             </div>
 

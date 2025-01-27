@@ -8,6 +8,19 @@ export interface Seller {
   numReviews: number;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  level: number;
+  parentId: number | null;
+  slug: string;
+  count: number;
+  verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 export interface Product {
   id: number;
   name: string;
@@ -16,6 +29,8 @@ export interface Product {
   manufacturer: string;
   images: string[];
   category: string;
+  categoryId?: number;
+  categoryRelation?: Category;
   compatibility: string;
   dimensions: string;
   weight: string;
