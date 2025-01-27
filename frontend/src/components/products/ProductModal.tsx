@@ -152,7 +152,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               onClick={handleBuyNow}
               className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
             >
-              {user ? 'Buy Now' : 'Login to Purchase'}
+              {user ? 'Contact Seller' : 'Login to Contact Seller'}
             </button>
           </div>
         </div>
