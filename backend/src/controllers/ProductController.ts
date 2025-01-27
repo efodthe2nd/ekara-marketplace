@@ -182,5 +182,21 @@ public getProducts = async (req: Request, res: Response): Promise<void> => {
       res.status(500).json({ message: 'Error searching products' });
     }
   };
+
+  getSellerProducts = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const sellerId = parseInt(req.params.sellerId);
+      if (isNaN(sellerId)) {
+        res.status(400).json({ message: "Invalid seller ID" });
+        return;
+      }
+
+      const products = await this.productService.getProductsBySellerId(sellerId);
+      res.json(products);
+    } catch (error: any) {
+      console.error('Error getting seller products:', error);
+      res.status(500).json({ message: error.message || "Error fetching seller products" });
+    }
+  };
   
 }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
 import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user/index';
 import { AuthRequest } from '../middleware/auth.middleware';
+//import { ProductService } from '../services/ProductService';
 
 export class UserController {
     constructor(private userService: UserService) {}
@@ -117,6 +118,23 @@ export class UserController {
         }
     };
 
+    // getSellerProducts = async (req: AuthRequest, res: Response) => {
+    //     try {
+    //         const sellerId = parseInt(req.params.id);
+    //         if (!sellerId) {
+    //             return res.status(400).json({ message: 'Invalid seller ID' });
+    //         }
+
+    //         const products = await this.productService.getProductsBySellerId(sellerId);
+    //         res.json(products);
+    //     } catch (error: any) {
+    //         console.error('Error fetching seller products:', error);
+    //         res.status(500).json({
+    //             message: error.message || 'Error fetching seller products'
+    //         });
+    //     }
+    // };
+
     // New endpoints for role management
     addRole = async (req: AuthRequest, res: Response) => {
         try {
@@ -211,11 +229,16 @@ export class UserController {
 
   uploadProfilePicture = async (req: AuthRequest, res: Response) => {
     try {
-        console.log('Request body:', req.body);  // Debug log
-        
+        console.log('Upload request received:', {
+            user: req.user?.id,
+            bodyKeys: Object.keys(req.body)
+        });
+
         if (!req.user || !req.body.profilePicture) {
-            console.log('User:', req.user);  // Debug log
-            console.log('Profile picture exists:', !!req.body.profilePicture);  // Debug log
+            console.log('Missing data:', {
+                hasUser: !!req.user,
+                hasProfilePicture: !!req.body.profilePicture
+            });
             return res.status(400).json({
                 message: 'No user or profile picture provided'
             });
@@ -227,6 +250,8 @@ export class UserController {
         // Update user with new profile picture
         const updatedUser = await this.userService.updateProfilePicture(userId, base64Image);
 
+        console.log('Profile picture updated successfully');
+
         // Remove password from response
         const { password, ...userWithoutPassword } = updatedUser;
 
@@ -236,7 +261,7 @@ export class UserController {
             profilePicUrl: base64Image
         });
     } catch (error: any) {
-        console.error('Error uploading profile picture:', error);
+        console.error('Error in uploadProfilePicture:', error);
         res.status(400).json({
             message: error.message || 'Error uploading profile picture'
         });

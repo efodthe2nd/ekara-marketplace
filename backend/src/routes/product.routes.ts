@@ -8,6 +8,13 @@ export const productRouter = (productController: ProductController): Router => {
 
   // Product routes
   console.log('Registering product routes...');
+
+  // Add the seller products route
+  router.get(
+    '/seller/:sellerId',
+    authMiddleware,
+    productController.getSellerProducts as RequestHandler
+);
   
   router.get('/', productController.getProducts as RequestHandler);
   router.get('/suggestions', productController.getSuggestions as RequestHandler);

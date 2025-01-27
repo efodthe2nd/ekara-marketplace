@@ -19,7 +19,24 @@ export class ProductService {
     Object.assign(this.productRepository, productRepositoryMethods);
   }
 
-  // src/services/ProductService.ts
+  // Add this new method to fetch products by seller ID
+  async getProductsBySellerId(sellerId: number): Promise<Product[]> {
+    return this.productRepository.find({
+      where: {
+        seller: {
+          user: {
+            id: sellerId
+          }
+        }
+      },
+      relations: ["seller", "category"],
+      order: {
+        createdAt: "DESC"
+      }
+    });
+  }
+
+  
   async createProduct(
     productData: Partial<Product>,
     userId: number
@@ -37,12 +54,11 @@ export class ProductService {
         throw new Error("Seller profile not found");
       }
 
-      // Create product directly with the data
       const newProduct = this.productRepository.create({
         ...productData,
         categoryId: productData.categoryId,
         seller: sellerProfile,
-        images: productData.images || [], // Ensure images is always an array
+        images: productData.images || [],
       });
 
       return this.productRepository.save(newProduct);
