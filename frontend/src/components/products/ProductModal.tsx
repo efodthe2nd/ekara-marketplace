@@ -1,11 +1,10 @@
-// src/components/products/ProductModal.tsx
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Product } from '@/types/product';
 import Image from 'next/image';
-import { X, Package, Truck, Shield } from 'lucide-react';
+import { X, Package, Truck, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductModalProps {
   product: Product;
@@ -15,9 +14,9 @@ interface ProductModalProps {
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const { user } = useAuth();
   const router = useRouter();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const getImageUrl = (imageName: string) => {
-
     if (imageName.startsWith('data:image')) {
       return imageName;
     }
@@ -27,15 +26,25 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     return imageName.startsWith('/') ? imageName : `/uploads/${imageName}`;
   };
 
-  const imageSrc = product.images && product.images.length > 0 
-    ? getImageUrl(product.images[0])
-    : '/placeholder-image.jpg';
+  const nextImage = () => {
+    if (product.images && product.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === product.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
 
-    React.useEffect(() => {
-      console.log('Product in modal:', product);
-      console.log('Images:', product.images);
-      console.log('First image:', product.images?.[0]);
-    }, [product]);
+  const previousImage = () => {
+    if (product.images && product.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? product.images.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const imageSrc = product.images && product.images.length > 0 
+    ? getImageUrl(product.images[currentImageIndex])
+    : '/placeholder-image.jpg';
 
   const handleBuyNow = () => {
     if (!user) {
@@ -48,39 +57,61 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
-        {/* Close Button - Absolute positioned */}
         <button 
           onClick={onClose} 
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50"
         >
           <X className="h-6 w-6" />
         </button>
 
         <div className="grid md:grid-cols-2 gap-0">
           {/* Left Side - Image */}
-        <div className="relative w-full h-full min-h-[500px] bg-gray-100">
-          <Image 
-            src={imageSrc}
-            alt={product.name}
-            fill
-            style={{ objectFit: 'cover' }}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="w-full h-full"
-          />
-        </div>
+          <div className="relative w-full h-full min-h-[500px] bg-gray-100">
+            <Image 
+              src={imageSrc}
+              alt={product.name}
+              fill
+              style={{ objectFit: 'cover' }}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="w-full h-full"
+            />
+            
+            {product.images && product.images.length > 1 && (
+              <>
+                {/* Previous Button */}
+                <button
+                  onClick={previousImage}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-r transition-colors"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+
+                {/* Next Button */}
+                <button
+                  onClick={nextImage}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-l transition-colors"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+
+                {/* Image Counter */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/30 text-white px-3 py-1 rounded-full text-sm">
+                  {currentImageIndex + 1} / {product.images.length}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Right Side - Product Details */}
           <div className="p-8">
-            {/* Category Badge */}
             <div className="mb-4">
               <span className="bg-blue-50 text-blue-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
-              {product.categoryRelation?.name || 'Uncategorized'}
+                {product.categoryRelation?.name || 'Uncategorized'}
               </span>
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h2>
             
-            {/* Price and Stock */}
             <div className="flex items-center justify-between mb-6">
               <span className="text-3xl font-bold text-gray-900">
                 ${parseFloat(product.price).toFixed(2)}
@@ -100,10 +131,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </span>
             </div>
 
-            {/* Description */}
             <p className="text-gray-600 mb-6">{product.description}</p>
 
-            {/* Specifications Grid */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="space-y-1">
                 <span className="text-sm text-gray-500">Manufacturer</span>
@@ -123,7 +152,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </div>
             </div>
 
-            {/* Features/Benefits */}
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Truck className="h-5 w-5 text-blue-600" />
@@ -139,7 +167,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </div>
             </div>
 
-            {/* Seller Information */}
             {product.seller?.companyName && (
               <div className="border-t border-gray-200 pt-4 mb-6">
                 <span className="text-sm text-gray-500">Sold by</span>
@@ -147,7 +174,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </div>
             )}
 
-            {/* Buy Button */}
             <button
               onClick={handleBuyNow}
               className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
