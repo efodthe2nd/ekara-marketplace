@@ -2,22 +2,24 @@ import { Router } from 'express';
 import { ProductController } from '../controllers/ProductController';
 import { authMiddleware, requireRole } from '../middleware/auth.middleware';
 import { RequestHandler } from 'express';
+import { upload } from '../middleware/upload.middleware';
 
 export const productRouter = (productController: ProductController): Router => {
     const router = Router();
 
-    // Add debug log
-    console.log('Registering product routes...');
-
     // Basic product routes
-    router.get('/', productController.getProducts as RequestHandler);
-    router.get('/:id', productController.getProduct as RequestHandler);
+    router.get('/', 
+        productController.getProducts as RequestHandler);
+    router.get('/:id', 
+        productController.getProduct as RequestHandler);
+
     
     // Seller-specific routes
     router.get('/seller/:sellerId', 
         authMiddleware,
         productController.getSellerProducts as RequestHandler
     );
+
 
     router.get('/seller/:sellerId/stats', 
         productController.getSellerStats as RequestHandler
@@ -26,7 +28,7 @@ export const productRouter = (productController: ProductController): Router => {
     // Protected routes
     router.post('/',
         authMiddleware,
-        requireRole('seller'),
+        requireRole('seller'), upload.array('images', 5),
         productController.createProduct as RequestHandler
     );
 
@@ -51,13 +53,6 @@ export const productRouter = (productController: ProductController): Router => {
         productController.searchProducts as RequestHandler
     );
 
-    // Debug log registered routes
-    // console.log('Product routes registered:', router.stack.map(r => {
-    //     if (r.route) {
-    //         return `${Object.keys((r.route as any).methods)} ${r.route.path}`;
-    //     }
-    //     return null;
-    // }).filter(Boolean));
 
     return router;
 };
