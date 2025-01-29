@@ -4,6 +4,7 @@ import { SellerProfile } from "../entities/SellerProfile";
 import { CreateProductDto } from "../dto/user/CreateProductDto";
 import { UpdateProductDto } from "../dto/user/UpdateProductDto";
 import { productRepositoryMethods } from "../entities/product.repository";
+import { Review } from "../entities";
 import fs from "fs";
 import path from "path";
 
@@ -14,10 +15,12 @@ export interface ProductRepositoryCustom extends Repository<Product> {
 export class ProductService {
   constructor(
     private productRepository: Repository<Product> & ProductRepositoryCustom,
+    private reviewRepository: Repository<Review>,
     private sellerRepository: Repository<SellerProfile>
   ) {
     Object.assign(this.productRepository, productRepositoryMethods);
   }
+
 
   // Add this new method to fetch products by seller ID
   async getProductsBySellerId(sellerId: number): Promise<Product[]> {
@@ -71,21 +74,33 @@ export class ProductService {
   async getProductById(id: number): Promise<Product | null> {
     return this.productRepository.findOne({
       where: { id },
-      relations: {
-        seller: true,
-      },
+      relations: ['seller', 'seller.user', 'categoryRelation'],
       select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        manufacturer: true,
+        compatibility: true,
+        dimensions: true,
+        weight: true,
+        warranty: true,
+        stock: true,
+        images: true,
         seller: {
           id: true,
           companyName: true,
           companyDescription: true,
-          website: true,
           rating: true,
-          numReviews: true,
-        },
-      },
+          user: {
+            id: true,
+            username: true
+          }
+        }
+      }
     });
   }
+
 
   async updateProduct(
     id: number,
@@ -132,6 +147,7 @@ export class ProductService {
     const queryBuilder = this.productRepository
       .createQueryBuilder("product")
       .leftJoinAndSelect("product.seller", "seller")
+      .leftJoinAndSelect("seller.user", "user")
       .leftJoinAndSelect("product.categoryRelation", "category");
 
     if (filters?.category) {
@@ -278,5 +294,39 @@ export class ProductService {
       .getMany();
 
     return { products, total };
+  }
+
+  async getSellerReviews(sellerId: number, page: number = 1, limit: number = 5): Promise<{ reviews: Review[]; total: number; hasMore: boolean }> {
+    const [reviews, total] = await this.reviewRepository
+      .createQueryBuilder('review')
+      .leftJoinAndSelect('review.buyer', 'buyer')
+      .leftJoinAndSelect('buyer.user', 'user')
+      .where('review.sellerId = :sellerId', { sellerId })
+      .orderBy('review.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+  
+    return {
+      reviews,
+      total,
+      hasMore: total > page * limit
+    };
+  }
+  
+  async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
+    const reviews = await this.reviewRepository
+      .createQueryBuilder('review')
+      .where('review.sellerId = :sellerId', { sellerId })
+      .select([
+        'COUNT(*) as totalReviews',
+        'AVG(review.rating) as averageRating'
+      ])
+      .getRawOne();
+  
+    return {
+      averageRating: Number(reviews.averageRating) || 0,
+      totalReviews: Number(reviews.totalReviews) || 0
+    };
   }
 }

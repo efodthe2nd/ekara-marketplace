@@ -11,7 +11,7 @@ export const userRouter = (userController: UserController): Router => {
     router.post('/register', userController.register);
     router.post('/login', userController.login);
 
-    // Protected routes
+    // Get user public profile - move this after specific routes
     router.get('/profile', authMiddleware, userController.getProfile as RequestHandler);
     router.put('/profile', authMiddleware, userController.updateProfile as RequestHandler);
     router.get('/roles', authMiddleware, userController.getUserRoles as RequestHandler);
@@ -21,8 +21,14 @@ export const userRouter = (userController: UserController): Router => {
     router.post(
         '/profile/picture',
         authMiddleware,
-        uploadProfilePicture,  // This middleware now uses memoryStorage
+        uploadProfilePicture,
         userController.uploadProfilePicture as RequestHandler
+    );
+
+    router.put(
+        '/profile/location',
+        authMiddleware,
+        userController.updateLocation as RequestHandler
     );
 
     // Role-specific routes
@@ -47,11 +53,8 @@ export const userRouter = (userController: UserController): Router => {
         userController.createSellerProfile as RequestHandler
     );
 
-    router.put(
-        '/profile/location',
-        authMiddleware,
-        userController.updateLocation as RequestHandler
-    );
+    // Public profile route - place at the end to avoid conflicts
+    router.get('/:userId', userController.getUserPublicProfile as RequestHandler);
 
     return router;
 };

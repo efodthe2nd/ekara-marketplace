@@ -20,6 +20,8 @@ import { Product } from './entities/Product';
 import { BidService } from './services/BidService';
 import { BidController } from './controllers/BidController';
 import { initializeBidScheduler } from './schedulers';
+import { ReviewService } from './services/ReviewService';
+import { ReviewController } from './controllers/ReviewController';
 import cors from 'cors';
 
 
@@ -33,10 +35,10 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// In your main server file (e.g., server.ts)
 
 
-// Add this static file configuration
+
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 const AppDataSource = new DataSource({
@@ -68,6 +70,7 @@ async function initializeApp() {
                 AppDataSource.getRepository(Entities.Product),
                 productRepositoryMethods
             ) as Repository<Product> & ProductRepositoryCustom,
+            AppDataSource.getRepository(Entities.Review),
             AppDataSource.getRepository(Entities.SellerProfile)
         );
 
@@ -87,6 +90,12 @@ async function initializeApp() {
             AppDataSource.getRepository(Entities.Bid),
             AppDataSource.getRepository(Entities.Product)
         );
+        const reviewService = new ReviewService(
+        
+            AppDataSource.getRepository(Entities.Review),
+            AppDataSource.getRepository(Entities.User),
+            AppDataSource.getRepository(Entities.SellerProfile)
+        )
 
         console.log("Services initialized!");
 
@@ -96,6 +105,7 @@ async function initializeApp() {
         const productController = new ProductController(productService);
         const orderController = new OrderController(orderService);
         const categoryController = new CategoryController(categoryService);
+        const reviewController = new ReviewController(reviewService);
         
         const bidController = new BidController(bidService);
         console.log("Controllers Initialized"); 
@@ -114,11 +124,12 @@ async function initializeApp() {
         // Initialize routes
         console.log("About to initialize routes...");
         const appRouter = AppRouter(
-            userController, productController, categoryController
+            userController, productController, categoryController, reviewController
             //orderController, 
             //bidController, 
             );
             app.use('/api', appRouter);
+            //app.use('/api/reviews', appRouter);
             
             // Error handling middleware
             app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

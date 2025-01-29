@@ -61,12 +61,19 @@ export class UserController {
             const userId = req.user.id;
             const user = await this.userService.getUserById(userId);
             
+            // Log to debug
+            console.log('Getting profile:', {
+                userId,
+                hasProfilePicture: !!user.profilePicture
+            });
+            
             const { password, ...userWithoutPassword } = user;
            
             res.json({
                 user: userWithoutPassword
             });
         } catch (error: any) {
+            console.error('Error getting profile:', error);
             res.status(404).json({
                 message: error.message || 'User not found'
             });
@@ -226,6 +233,75 @@ export class UserController {
         res.status(400).json({ message: error?.message || 'Error creating seller profile' });
     }
   };
+
+  getUserById = async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await this.userService.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Remove sensitive information
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+
+  // Add this new method to your UserController class
+  getUserPublicProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = parseInt(req.params.userId);
+        if (isNaN(userId)) {
+            res.status(400).json({ message: 'Invalid user ID' });
+            return;
+        }
+
+        const user = await this.userService.getUserById(userId);
+        
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        // Include all public profile information
+        const publicProfile = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            profilePicture: user.profilePicture,
+            location: user.location,
+            bio: user.bio,
+            isSeller: user.isSeller,
+            isBuyer: user.isBuyer,
+            sellerProfile: user.sellerProfile ? {
+                id: user.sellerProfile.id,
+                companyName: user.sellerProfile.companyName,
+                companyDescription: user.sellerProfile.companyDescription,
+                website: user.sellerProfile.website,
+                rating: user.sellerProfile.rating,
+                numReviews: user.sellerProfile.numReviews
+            } : null,
+            buyerProfile: user.buyerProfile ? {
+                id: user.buyerProfile.id,
+                // Add any public buyer profile fields
+            } : null,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+
+        res.json({ user: publicProfile });
+    } catch (error: any) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Error fetching user profile' });
+    }
+};
 
   uploadProfilePicture = async (req: AuthRequest, res: Response) => {
     try {

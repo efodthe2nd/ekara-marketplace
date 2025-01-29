@@ -77,9 +77,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   
 
-  const updateUserProfile = (updates: Partial<User>) => {
-    setUser((prevUser) => (prevUser ? { ...prevUser, ...updates } : prevUser));
-  };
+  const updateUserProfile = async (updates: Partial<User>) => {
+    if (user) {
+        const updatedUser = { ...user, ...updates };
+        setUser(updatedUser);
+        
+        // If you're using localStorage to persist the user data:
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Log to debug
+        console.log('Updated user profile:', {
+            hasProfilePicture: !!updatedUser.profilePicture
+        });
+    }
+};
 
   
   

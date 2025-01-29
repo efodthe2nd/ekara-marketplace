@@ -198,5 +198,37 @@ public getProducts = async (req: Request, res: Response): Promise<void> => {
       res.status(500).json({ message: error.message || "Error fetching seller products" });
     }
   };
+
+  public getSellerStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const sellerId = parseInt(req.params.sellerId);
+      if (isNaN(sellerId)) {
+        res.status(400).json({ message: "Invalid seller ID" });
+        return;
+      }
+
+      const stats = await this.productService.getSellerStats(sellerId);
+      res.json(stats);
+    } catch (error: any) {
+      console.error('Error getting seller stats:', error);
+      res.status(500).json({ message: error.message || "Error fetching seller stats" });
+    }
+  };
+
+  // public getSellerReviews = async (req: Request, res: Response): Promise<void> => {
+  //   try {
+  //     const sellerId = parseInt(req.params.sellerId);
+  //     if (isNaN(sellerId)) {
+  //       res.status(400).json({ message: "Invalid seller ID" });
+  //       return;
+  //     }
+  
+  //     const reviews = await this.productService.getSellerReviews(sellerId);
+  //     res.json(reviews);
+  //   } catch (error: any) {
+  //     console.error('Error getting seller reviews:', error);
+  //     res.status(500).json({ message: error.message || "Error fetching seller reviews" });
+  //   }
+  // };
   
 }

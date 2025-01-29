@@ -39,8 +39,12 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   seller?: {
-    id?: number;
-    companyName?: string;
+    id: number;
+    companyName: string;
+    user: {
+      id: number;
+      username: string;
+    };
   };
 }
 
