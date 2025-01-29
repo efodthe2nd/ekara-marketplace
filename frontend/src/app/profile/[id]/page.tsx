@@ -135,12 +135,12 @@ const ProfilePage = () => {
     }, []);
   
     // Use the function in useEffect
-    useEffect(() => {
-      const profileId = getProfileId(viewedProfileId) || user?.id?.toString();
-      if (profileId && (viewedUser?.isSeller || user?.isSeller)) {
-        fetchSellerStats(profileId);
-      }
-    }, [viewedProfileId, user?.id, viewedUser?.isSeller, user?.isSeller, fetchSellerStats]);
+    // useEffect(() => {
+    //   const profileId = getProfileId(viewedProfileId) || user?.id?.toString();
+    //   if (profileId && (viewedUser?.isSeller || user?.isSeller)) {
+    //     fetchSellerStats(profileId);
+    //   }
+    // }, [viewedProfileId, user?.id, viewedUser?.isSeller, user?.isSeller, fetchSellerStats]);
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -289,7 +289,7 @@ const ProfilePage = () => {
     setIsLoadingReviews(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/products/seller/${viewedProfileId || user?.id}/reviews?page=${pageNum}&limit=5`,
+        `http://localhost:3000/api/reviews/seller/${viewedProfileId || user?.id}/reviews?page=${pageNum}&limit=5`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -302,6 +302,7 @@ const ProfilePage = () => {
       }
 
       const data = await response.json();
+      console.log(data);
       setHasMore(data.hasMore);
 
       if (append) {

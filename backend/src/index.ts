@@ -124,12 +124,10 @@ async function initializeApp() {
         // Initialize routes
         console.log("About to initialize routes...");
         const appRouter = AppRouter(
-            userController, productController, categoryController, reviewController
-            //orderController, 
-            //bidController, 
-            );
+            userController, productController, categoryController, reviewController);
+            
             app.use('/api', appRouter);
-            //app.use('/api/reviews', appRouter);
+            
             
             // Error handling middleware
             app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -19,6 +19,12 @@ export const reviewRouter = (reviewController: ReviewController): Router => {
     reviewController.getSellerStats as RequestHandler
   );
 
+  // Create reviews for a seller
+  router.post(
+    "/seller/:sellerId/reviews",
+    reviewController.createReview as RequestHandler
+  );
+
   // Get reviews for a seller
   router.get(
     "/seller/:sellerId/reviews",

@@ -1,7 +1,7 @@
 import { Router, Request, Response, RequestHandler } from "express";
-import * as fs from "fs";
-import * as path from "path";
-import { promisify } from 'util';
+// import * as fs from "fs";
+// import * as path from "path";
+// import { promisify } from 'util';
 import { ProductService } from "../services/ProductService";
 import { CreateProductDto } from "../dto/user/CreateProductDto";
 import { Product } from "../entities/Product";
@@ -13,10 +13,10 @@ import {
 } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
 
-// Promisified fs functions
-const mkdir = promisify(fs.mkdir);
-const access = promisify(fs.access);
-const writeFile = promisify(fs.writeFile);
+// // Promisified fs functions
+// const mkdir = promisify(fs.mkdir);
+// const access = promisify(fs.access);
+// const writeFile = promisify(fs.writeFile);
 
 export class ProductController {
   public router: Router;
@@ -25,7 +25,7 @@ export class ProductController {
   }
 
 
-  // src/controllers/ProductController.ts
+
 createProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('Received files:', req.files); // Debug line

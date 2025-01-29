@@ -92,6 +92,7 @@ export class ReviewController {
     };
 
     getSellerReviews = async (req: Request, res: Response): Promise<void> => {
+        console.log('Getting seller reviews');
         try {
           const sellerId = parseInt(req.params.sellerId);
           const page = parseInt(req.query.page as string) || 1;

@@ -53,6 +53,6 @@ export const productRouter = (productController: ProductController): Router => {
         productController.searchProducts as RequestHandler
     );
 
-
+    
     return router;
 };
