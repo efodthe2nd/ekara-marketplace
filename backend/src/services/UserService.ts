@@ -161,43 +161,43 @@ export class UserService {
 
   async getUserById(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
-        where: { id },
-        relations: {
-            sellerProfile: true,
-            buyerProfile: true
+      where: { id },
+      relations: {
+        sellerProfile: true,
+        buyerProfile: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        profilePicture: true,
+        location: true,
+        bio: true,
+        isSeller: true,
+        isBuyer: true,
+        createdAt: true,
+        updatedAt: true,
+        sellerProfile: {
+          id: true,
+          companyName: true,
+          companyDescription: true,
+          website: true,
+          rating: true,
+          numReviews: true,
         },
-        select: {
-            id: true,
-            username: true,
-            email: true,
-            profilePicture: true,
-            location: true,
-            bio: true,
-            isSeller: true,
-            isBuyer: true,
-            createdAt: true,
-            updatedAt: true,
-            sellerProfile: {
-                id: true,
-                companyName: true,
-                companyDescription: true,
-                website: true,
-                rating: true,
-                numReviews: true
-            },
-            buyerProfile: {
-                id: true,
-                // Add any necessary buyer profile fields
-            }
-        }
+        buyerProfile: {
+          id: true,
+          // Add any necessary buyer profile fields
+        },
+      },
     });
 
     if (!user) {
-        throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     return user;
-}
+  }
 
   // Add this method to UserService class
   async createSellerProfile(
@@ -301,19 +301,24 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
-    const reviews = await this.reviewRepository
-      .createQueryBuilder('review')
-      .where('review.sellerId = :sellerId', { sellerId })
+  async getSellerStats(
+    sellerId: number
+  ): Promise<{ averageRating: number; totalReviews: number }> {
+    const result = await this.reviewRepository
+      .createQueryBuilder("review")
+      .leftJoin("review.seller", "sellerProfile") // Match the entity field name
+      .where("sellerProfile.id = :sellerId", { sellerId })
       .select([
-        'COUNT(*) as totalReviews',
-        'AVG(review.rating) as averageRating'
+        'COUNT(review.id) as "totalReviews"',
+        'AVG(review.rating) as "averageRating"',
       ])
       .getRawOne();
-  
+
     return {
-      averageRating: Number(reviews.averageRating) || 0,
-      totalReviews: Number(reviews.totalReviews) || 0
+      averageRating: result?.averageRating
+        ? parseFloat(result.averageRating)
+        : 0,
+      totalReviews: result?.totalReviews ? parseInt(result.totalReviews) : 0,
     };
   }
 }
