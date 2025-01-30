@@ -10,13 +10,15 @@ import {
   UpdateUserDto,
   CreateSellerProfileDto,
 } from "../dto/user";
+import { Review } from "../entities/Review";
 //import { CreateSellerProfileDto } from '../dto/user/CreateSellerProfileDto';
 
 export class UserService {
   constructor(
     private userRepository: Repository<User>,
     private buyerProfileRepository: Repository<BuyerProfile>,
-    private sellerProfileRepository: Repository<SellerProfile>
+    private sellerProfileRepository: Repository<SellerProfile>,
+    private reviewRepository: Repository<Review>
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -297,5 +299,21 @@ export class UserService {
     const user = await this.getUserById(userId);
     user.location = location;
     return this.userRepository.save(user);
+  }
+
+  async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
+    const reviews = await this.reviewRepository
+      .createQueryBuilder('review')
+      .where('review.sellerId = :sellerId', { sellerId })
+      .select([
+        'COUNT(*) as totalReviews',
+        'AVG(review.rating) as averageRating'
+      ])
+      .getRawOne();
+  
+    return {
+      averageRating: Number(reviews.averageRating) || 0,
+      totalReviews: Number(reviews.totalReviews) || 0
+    };
   }
 }

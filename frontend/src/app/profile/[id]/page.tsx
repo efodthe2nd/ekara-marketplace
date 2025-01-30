@@ -116,7 +116,7 @@ const ProfilePage = () => {
     const fetchSellerStats = useCallback(async (id: string) => {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/products/seller/${id}/stats`,
+          `http://localhost:3000/api/users/seller/${id}/stats`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -177,7 +177,7 @@ const ProfilePage = () => {
       if (user?.id && user.isSeller) {
         try {
           const response = await fetch(
-            `http://localhost:3000/api/products/seller/${user.id}/stats`,
+            `http://localhost:3000/api/users/seller/${user.id}/stats`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,

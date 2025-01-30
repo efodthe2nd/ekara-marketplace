@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { Order } from './Order';
+import { Review } from './Review';
 
 @Entity('buyer_profiles')
 export class BuyerProfile {
@@ -25,4 +26,9 @@ export class BuyerProfile {
 
     @Column('simple-array', { nullable: true })
     wishlist: number[];
+
+    @OneToMany(() => Review, (review) => review.seller)
+      reviews: Review[];
+
+    
 }

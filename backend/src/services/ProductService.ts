@@ -314,19 +314,4 @@ export class ProductService {
     };
   }
   
-  async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
-    const reviews = await this.reviewRepository
-      .createQueryBuilder('review')
-      .where('review.sellerId = :sellerId', { sellerId })
-      .select([
-        'COUNT(*) as totalReviews',
-        'AVG(review.rating) as averageRating'
-      ])
-      .getRawOne();
-  
-    return {
-      averageRating: Number(reviews.averageRating) || 0,
-      totalReviews: Number(reviews.totalReviews) || 0
-    };
-  }
 }

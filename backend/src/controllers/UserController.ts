@@ -416,4 +416,40 @@ getSellerProfile = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+getSellerStats = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        res.status(400).json({ message: "Invalid user ID" });
+        return;
+      }
+
+      // First get the user with seller profile
+      const userWithSeller = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['sellerProfile'],
+      });
+
+      if (!userWithSeller) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      if (!userWithSeller.sellerProfile) {
+        res.status(404).json({ message: 'Seller profile not found' });
+        return;
+      }
+
+      // Now get stats using the actual seller profile ID
+      const stats = await this.userService.getSellerStats(userWithSeller.sellerProfile.id);
+      res.json(stats);
+    } catch (error: any) {
+      console.error('Error getting seller stats:', error);
+      res.status(500).json({ 
+        message: error.message || "Error fetching seller stats",
+        details: error.details 
+      });
+    }
+  };
 }

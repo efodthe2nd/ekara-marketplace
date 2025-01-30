@@ -63,7 +63,8 @@ async function initializeApp() {
         const userService = new UserService(
             AppDataSource.getRepository(Entities.User),
             AppDataSource.getRepository(Entities.BuyerProfile),
-            AppDataSource.getRepository(Entities.SellerProfile)
+            AppDataSource.getRepository(Entities.SellerProfile),
+            AppDataSource.getRepository(Entities.Review)
         );
         const productService = new ProductService(
             Object.assign(

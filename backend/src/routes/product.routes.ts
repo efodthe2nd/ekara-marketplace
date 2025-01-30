@@ -21,9 +21,9 @@ export const productRouter = (productController: ProductController): Router => {
     );
 
 
-    router.get('/seller/:sellerId/stats', 
-        productController.getSellerStats as RequestHandler
-    );
+    // router.get('/seller/:sellerId/stats', 
+    //     productController.getSellerStats as RequestHandler
+    // );
 
     // Protected routes
     router.post('/',
