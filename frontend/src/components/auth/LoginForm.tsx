@@ -1,9 +1,9 @@
-// src/components/auth/LoginForm.tsx
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
+import Link from 'next/link';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -12,7 +12,7 @@ interface LoginFormProps {
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const { login } = useAuth();
@@ -20,13 +20,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       await login(email, password);
-      // Wait for next tick to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 0));
       onSuccess?.();
-      // Add a small delay before redirect to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 100));
       router.push('/dashboard');
     } catch {
@@ -67,49 +65,46 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           onClick={() => setShowPassword((prev) => !prev)}
           className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 hover:text-gray-800"
         >
-         {showPassword ? (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    transform="translate(0, 10)"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M1.5 12s4.5-7 10.5-7 10.5 7 10.5 7-4.5 7-10.5 7S1.5 12 1.5 12z"
-    />
-    <circle cx="12" cy="12" r="3" fill="currentColor" />
-  </svg>
-) : (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 2 24 24"
-    stroke="currentColor"
-    transform="translate(0, 10)"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M1.5 12s4.5-7 10.5-7 10.5 7 10.5 7-4.5 7-10.5 7S1.5 12 1.5 12z"
-    />
-    <circle cx="12" cy="12" r="3" fill="currentColor" />
-    <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" strokeWidth="2" />
-  </svg>
-)}
-
+          {showPassword ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              transform="translate(0, 10)"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M1.5 12s4.5-7 10.5-7 10.5 7 10.5 7-4.5 7-10.5 7S1.5 12 1.5 12z"
+              />
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 2 24 24"
+              stroke="currentColor"
+              transform="translate(0, 10)"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M1.5 12s4.5-7 10.5-7 10.5 7 10.5 7-4.5 7-10.5 7S1.5 12 1.5 12z"
+              />
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+              <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          )}
         </button>
       </div>
 
-      {error && (
-        <div className="text-red-500 text-sm">{error}</div>
-      )}
+      {error && <div className="text-red-500 text-sm">{error}</div>}
 
       <button
         type="submit"
@@ -117,6 +112,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       >
         Sign in
       </button>
+
+      {/* Register link */}
+      <p className="text-sm text-center text-gray-600">
+        Don&apos;t have an account?{' '}
+        <Link href="/auth/register" className="text-blue-600 hover:underline">
+          Register
+        </Link>
+      </p>
     </form>
   );
 };
