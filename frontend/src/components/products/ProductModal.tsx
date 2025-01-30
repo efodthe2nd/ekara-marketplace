@@ -203,7 +203,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Package className="h-5 w-5 text-blue-600" />
-                <span>Genuine {product.manufacturer} parts</span>
+                <span className="cursor-pointer hover:cyan-600 transition-colors hover:underline"
+                onClick={() =>
+                  router.push(
+                    `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
+                  )
+                }>Genuine {product.manufacturer} parts</span>
               </div>
             </div>
 
