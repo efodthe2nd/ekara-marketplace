@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class UpdateEntityRelationship1738199885013 implements MigrationInterface {
+export class AddMissingFields1738240195827 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
     }

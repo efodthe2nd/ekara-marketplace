@@ -128,7 +128,7 @@ const ProfilePage = () => {
 
       if (!profileResponse.ok) {
         const errorData = await profileResponse.json();
-        console.error('Server error:', errorData);
+        console.error("Server error:", errorData);
         throw new Error(errorData.message || "Failed to fetch seller profile");
       }
 
@@ -168,7 +168,6 @@ const ProfilePage = () => {
     }
   }, [viewedProfileId, user, fetchSellerProfileAndStats]);
 
-
   const handleReviewSubmitted = () => {
     setShowReviewForm(false);
     const profileId = getProfileId(viewedProfileId);
@@ -177,8 +176,6 @@ const ProfilePage = () => {
       fetchReviews(1, false);
     }
   };
-
-
 
   const fetchSellerStats = useCallback(async (id: string) => {
     try {
@@ -201,7 +198,6 @@ const ProfilePage = () => {
       console.error("Error fetching seller stats:", err);
     }
   }, []);
-
 
   useEffect(() => {
     const fetchSellerStats = async () => {
@@ -417,7 +413,6 @@ const ProfilePage = () => {
       fetchReviews(nextPage, true);
     }
   };
-
 
   const handleProfilePicChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -767,12 +762,12 @@ const ProfilePage = () => {
               </button>
             )}
 
-{showReviewForm && (
-    <ReviewForm
-      sellerId={parseInt(getProfileId(viewedProfileId) || "")}
-      onReviewSubmitted={handleReviewSubmitted}
-    />
-  )}
+            {showReviewForm && (
+              <ReviewForm
+                sellerId={parseInt(getProfileId(viewedProfileId) || "")}
+                onReviewSubmitted={handleReviewSubmitted}
+              />
+            )}
 
             {isLoadingReviews && reviews.length === 0 ? (
               <div className="text-center py-8">Loading reviews...</div>

@@ -13,88 +13,84 @@ import {
 } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
 
-// // Promisified fs functions
-// const mkdir = promisify(fs.mkdir);
-// const access = promisify(fs.access);
-// const writeFile = promisify(fs.writeFile);
-
 export class ProductController {
   public router: Router;
 
-  constructor(private productService: ProductService) {
-  }
+  constructor(private productService: ProductService) {}
 
+  createProduct = async (req: Request, res: Response): Promise<void> => {
+    try {
+      console.log("Received files:", req.files); // Debug line
+      console.log("Received body:", req.body); // Debug line
 
+      const files = req.files as Express.Multer.File[];
+      const productData = JSON.parse(req.body.productData);
 
-createProduct = async (req: Request, res: Response): Promise<void> => {
-  try {
-    console.log('Received files:', req.files); // Debug line
-    console.log('Received body:', req.body); // Debug line
+      // Convert files to Base64
+      const imageBase64s =
+        files?.map(
+          (file) =>
+            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
+        ) || [];
 
-    const files = req.files as Express.Multer.File[];
-    const productData = JSON.parse(req.body.productData);
+      console.log("Number of images converted:", imageBase64s.length); // Debug line
 
-    // Convert files to Base64
-    const imageBase64s = files?.map(file => 
-      `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
-    ) || [];
+      const sellerId = (req as AuthRequest).user!.id;
 
-    console.log('Number of images converted:', imageBase64s.length); // Debug line
+      // Combine all data into a single object
+      const productToCreate = {
+        ...productData,
+        images: imageBase64s, // This contains the base64 strings
+        sellerId,
+      };
 
-    const sellerId = (req as AuthRequest).user!.id;
-    
-    // Combine all data into a single object
-    const productToCreate = {
-      ...productData,
-      images: imageBase64s, // This contains the base64 strings
-      sellerId
-    };
+      console.log("Creating product with images:", imageBase64s.length > 0); // Debug line
 
-    console.log('Creating product with images:', imageBase64s.length > 0); // Debug line
+      const product = await this.productService.createProduct(
+        productToCreate,
+        sellerId
+      );
 
-    const product = await this.productService.createProduct(
-      productToCreate,
-      sellerId
-    );
-    
-    res.status(201).json(product);
-  } catch (error: any) {
-    console.error('Error creating product:', error);
-    res.status(400).json({ message: error?.message || "An error occurred" });
-  }
-};
-  
-public getProducts = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { 
-      search, 
-      category, 
-      minPrice, 
-      maxPrice, 
-      page = 1, 
-      limit = 10 
-    } = req.query;
+      res.status(201).json(product);
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      res.status(400).json({ message: error?.message || "An error occurred" });
+    }
+  };
 
-    const result = await this.productService.listProducts(
-      Number(page),
-      Number(limit),
-      {
-        category: category as string,
-        minPrice: minPrice ? Number(minPrice) : undefined,
-        maxPrice: maxPrice ? Number(maxPrice) : undefined,
-        search: search as string
-      }
-    );
+  public getProducts = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const {
+        search,
+        category,
+        minPrice,
+        maxPrice,
+        page = 1,
+        limit = 10,
+      } = req.query;
 
-    res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ message: error?.message || "An error occurred" });
-  }
-};
+      const result = await this.productService.listProducts(
+        Number(page),
+        Number(limit),
+        {
+          category: category as string,
+          minPrice: minPrice ? Number(minPrice) : undefined,
+          maxPrice: maxPrice ? Number(maxPrice) : undefined,
+          search: search as string,
+        }
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ message: error?.message || "An error occurred" });
+    }
+  };
 
   public getProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-      const product = await this.productService.getProductById(Number(req.params.id));
+      const product = await this.productService.getProductById(
+        Number(req.params.id)
+      );
       if (!product) {
         res.status(404).json({ message: "Product not found" });
         return;
@@ -113,9 +109,9 @@ public getProducts = async (req: Request, res: Response): Promise<void> => {
         ...updateDto,
         // If categoryId is provided, it will be used directly
         // Remove any category string if it exists in the request
-        category: undefined
+        category: undefined,
       };
-  
+
       const product = await this.productService.updateProduct(
         Number(req.params.id),
         productUpdateData
@@ -135,51 +131,71 @@ public getProducts = async (req: Request, res: Response): Promise<void> => {
     }
   };
 
-  public uploadProductImages = async (req: Request, res: Response): Promise<void> => {
+  public uploadProductImages = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
       const productId = Number(req.params.id);
       const files = req.files as Express.Multer.File[];
-      
+
       if (!files || files.length === 0) {
         res.status(400).json({ message: "No files uploaded" });
         return;
       }
 
-      const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
-      const updatedProduct = await this.productService.updateProductImages(productId, imageUrls);
-      
+      const imageUrls = files.map(
+        (file) => `/uploads/products/${file.filename}`
+      );
+      const updatedProduct = await this.productService.updateProductImages(
+        productId,
+        imageUrls
+      );
+
       res.json(updatedProduct);
     } catch (error: any) {
-      console.error('Image upload error:', error);
-      res.status(500).json({ message: error?.message || "Image upload failed" });
+      console.error("Image upload error:", error);
+      res
+        .status(500)
+        .json({ message: error?.message || "Image upload failed" });
     }
   };
 
-  public getSuggestions = async (req: Request, res: Response): Promise<void> => {
+  public getSuggestions = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
       const { query } = req.query;
-      if (!query || typeof query !== 'string') {
+      if (!query || typeof query !== "string") {
         res.json({ suggestions: [] });
         return;
       }
       const suggestions = await this.productService.suggestProducts(query);
       res.json({ suggestions });
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching suggestions' });
+      res.status(500).json({ message: "Error fetching suggestions" });
     }
   };
-  
-  public searchProducts = async (req: Request, res: Response): Promise<void> => {
+
+  public searchProducts = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
     try {
       const { query, page = 1, limit = 10 } = req.query;
-      if (!query || typeof query !== 'string') {
-        res.status(400).json({ message: 'Search query is required' });
+      if (!query || typeof query !== "string") {
+        res.status(400).json({ message: "Search query is required" });
         return;
       }
-      const result = await this.productService.searchProducts(query, Number(page), Number(limit));
+      const result = await this.productService.searchProducts(
+        query,
+        Number(page),
+        Number(limit)
+      );
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: 'Error searching products' });
+      res.status(500).json({ message: "Error searching products" });
     }
   };
 
@@ -191,28 +207,45 @@ public getProducts = async (req: Request, res: Response): Promise<void> => {
         return;
       }
 
-      const products = await this.productService.getProductsBySellerId(sellerId);
+      const products = await this.productService.getProductsBySellerId(
+        sellerId
+      );
       res.json(products);
     } catch (error: any) {
-      console.error('Error getting seller products:', error);
-      res.status(500).json({ message: error.message || "Error fetching seller products" });
+      console.error("Error getting seller products:", error);
+      res
+        .status(500)
+        .json({ message: error.message || "Error fetching seller products" });
     }
   };
 
-  // public getSellerReviews = async (req: Request, res: Response): Promise<void> => {
-  //   try {
-  //     const sellerId = parseInt(req.params.sellerId);
-  //     if (isNaN(sellerId)) {
-  //       res.status(400).json({ message: "Invalid seller ID" });
-  //       return;
-  //     }
-  
-  //     const reviews = await this.productService.getSellerReviews(sellerId);
-  //     res.json(reviews);
-  //   } catch (error: any) {
-  //     console.error('Error getting seller reviews:', error);
-  //     res.status(500).json({ message: error.message || "Error fetching seller reviews" });
-  //   }
-  // };
-  
+  public getProductsByManufacturer = async (req: Request, res: Response): Promise<void> => {
+    console.log('Hit manufacturer route with query:', req.query);
+    const { manufacturer, page = 1, limit = 10 } = req.query;
+
+    if (!manufacturer) {
+      res.status(400).json({ error: 'Manufacturer query parameter is required' });
+      return;
+    }
+
+    try {
+      // Call the service to get products by manufacturer
+      const products = await this.productService.getProductsByManufacturer(
+        manufacturer as string,
+        Number(page),
+        Number(limit)
+      );
+
+      if (!products || products.length === 0) {
+        res.status(404).json({ message: `No products found for manufacturer: ${manufacturer}` });
+        return;
+      }
+
+      // Send response
+      res.status(200).json({ products });
+    } catch (error) {
+      console.error('Error fetching products by manufacturer:', error);
+      res.status(500).json({ error: 'Failed to fetch products' });
+    }
+}
 }

@@ -313,5 +313,29 @@ export class ProductService {
       hasMore: total > page * limit
     };
   }
+
+  public async getProductsByManufacturer(
+    manufacturer: string,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    try {
+      // Fetch products based on manufacturer, using pagination
+      const products = await this.productRepository.find({
+        where: { manufacturer },
+        take: limit,
+        skip: (page - 1) * limit, // pagination logic
+      });
+
+      return products;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error('Failed to fetch products by manufacturer: ' + error.message);
+      } else {
+        throw new Error('Failed to fetch products by manufacturer: ' + String(error));
+      }
+    }
+  }
+
   
 }

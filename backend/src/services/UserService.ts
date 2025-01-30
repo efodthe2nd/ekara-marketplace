@@ -26,11 +26,11 @@ export class UserService {
 
     // Check if user exists
     const existingUser = await this.userRepository.findOne({
-      where: [{ email }, { username }],
+        where: [{ email }, { username }],
     });
 
     if (existingUser) {
-      throw new Error("User with this email or username already exists");
+        throw new Error("User with this email or username already exists");
     }
 
     // Hash password
@@ -38,32 +38,36 @@ export class UserService {
 
     // Create user
     const user = this.userRepository.create({
-      email,
-      username,
-      password: hashedPassword,
-      isBuyer: role === "buyer",
-      isSeller: role === "seller",
+        email,
+        username,
+        password: hashedPassword,
+        isBuyer: true, // Ensure all users are marked as buyers
+        isSeller: role === "seller",
     });
 
     await this.userRepository.save(user);
 
-    // Create profile based on role
-    if (role === "buyer") {
-      const buyerProfile = this.buyerProfileRepository.create({
+    // Create Buyer Profile for every new user
+    const buyerProfile = this.buyerProfileRepository.create({
         user,
-        ...profileData,
-      });
-      await this.buyerProfileRepository.save(buyerProfile);
-    } else if (role === "seller") {
-      const sellerProfile = this.sellerProfileRepository.create({
-        user,
-        ...profileData,
-      });
-      await this.sellerProfileRepository.save(sellerProfile);
+        firstName: user.username,
+        lastName: '',
+        address: 'N/A',
+    });
+
+    await this.buyerProfileRepository.save(buyerProfile);
+
+    // Create Seller Profile only if role is 'seller'
+    if (role === "seller") {
+        const sellerProfile = this.sellerProfileRepository.create({
+            user,
+            ...profileData,
+        });
+        await this.sellerProfileRepository.save(sellerProfile);
     }
 
     return this.getUserById(user.id);
-  }
+}
 
   async validateUser(loginUserDto: LoginUserDto): Promise<User> {
     const { email, password } = loginUserDto;
@@ -161,43 +165,16 @@ export class UserService {
 
   async getUserById(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id },
-      relations: {
-        sellerProfile: true,
-        buyerProfile: true,
-      },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        profilePicture: true,
-        location: true,
-        bio: true,
-        isSeller: true,
-        isBuyer: true,
-        createdAt: true,
-        updatedAt: true,
-        sellerProfile: {
-          id: true,
-          companyName: true,
-          companyDescription: true,
-          website: true,
-          rating: true,
-          numReviews: true,
-        },
-        buyerProfile: {
-          id: true,
-          // Add any necessary buyer profile fields
-        },
-      },
+        where: { id },
+        relations: ['buyerProfile', 'sellerProfile'], // Ensure buyerProfile is included
     });
 
     if (!user) {
-      throw new Error("User not found");
+        throw new Error("User not found");
     }
 
     return user;
-  }
+}
 
   // Add this method to UserService class
   async createSellerProfile(

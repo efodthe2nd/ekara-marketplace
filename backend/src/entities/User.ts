@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany, AfterInsert } from 'typeorm';
 import { BuyerProfile } from './Buyer';
 import { SellerProfile } from './SellerProfile';
 import { Order } from './Order';
+import { getRepository } from 'typeorm';
 
 @Entity('users')
 export class User {
@@ -46,4 +47,5 @@ export class User {
 
     @OneToMany(() => Order, order => order.buyer)
     orders: Order[];
+
 }

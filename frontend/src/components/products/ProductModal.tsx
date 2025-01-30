@@ -113,7 +113,22 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
           {/* Right Side - Product Details */}
           <div className="p-8">
             <div className="mb-4">
-              <span className="bg-blue-50 text-blue-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
+              <span
+                className={`text-sm font-medium px-2.5 py-0.5 rounded-full transition-all ${
+                  product.categoryRelation?.name
+                    ? "bg-blue-50 text-blue-700 cursor-pointer hover:bg-blue-100"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }`}
+                onClick={() => {
+                  if (product.categoryRelation?.name) {
+                    // Redirect to the category page if category exists
+                    const categoryName = product.categoryRelation.name
+                      .toLowerCase()
+                      .replace(" ", "-");
+                    router.push(`/categories/${categoryName}`);
+                  }
+                }}
+              >
                 {product.categoryRelation?.name || "Uncategorized"}
               </span>
             </div>
@@ -148,7 +163,14 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="space-y-1">
                 <span className="text-sm text-gray-500">Manufacturer</span>
-                <p className="font-medium text-gray-900">
+                <p
+                  className="font-medium text-gray-900 cursor-pointer hover:underline"
+                  onClick={() =>
+                    router.push(
+                      `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
+                    )
+                  }
+                >
                   {product.manufacturer}
                 </p>
               </div>
@@ -208,7 +230,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
                 </p>
               </div>
             )}
-            
+
             <button
               onClick={handleBuyNow}
               className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"

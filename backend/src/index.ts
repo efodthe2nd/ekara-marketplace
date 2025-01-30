@@ -23,9 +23,12 @@ import { initializeBidScheduler } from './schedulers';
 import { ReviewService } from './services/ReviewService';
 import { ReviewController } from './controllers/ReviewController';
 import cors from 'cors';
+import listEndpoints from 'express-list-endpoints';
 
 
 const app = express();
+
+
 
 app.use(cors({
     origin: 'http://localhost:3001', // Your frontend URL
@@ -99,6 +102,7 @@ async function initializeApp() {
         )
 
         console.log("Services initialized!");
+        console.log(listEndpoints(app));
 
         // Initialize controllers
         console.log("Initializing controllers..."); 
