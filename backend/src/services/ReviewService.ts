@@ -14,39 +14,42 @@ export class ReviewService {
   async createReview(data: CreateReviewDto): Promise<Review> {
     const { sellerId, buyerId, rating, comment } = data;
 
-    // Validate rating
     if (rating < 1 || rating > 5) {
       throw new Error("Rating must be between 1 and 5");
     }
 
-    // Check if seller exists
-    const seller = await this.sellerRepository.findOne({
-      where: { userId: sellerId },
-    });
-
+    const seller = await this.sellerRepository.findOne({ where: { userId: sellerId } });
     if (!seller) {
       throw new Error("Seller not found");
     }
 
-    // Fetch buyer's profile via User ID
     const buyerUser = await this.userRepository.findOne({
       where: { id: buyerId },
-      relations: ["buyerProfile"], // Ensure your User entity has this relation
+      relations: ["buyerProfile"],
     });
 
     if (!buyerUser?.buyerProfile) {
-        throw new Error('Buyer profile not found');
-      }
+      throw new Error("Buyer profile not found");
+    }
 
-    // Create and save the review
     const review = this.reviewRepository.create({
       seller,
-      buyer: buyerUser.buyerProfile, // Link to BuyerProfile
+      buyer: buyerUser.buyerProfile,
       rating,
       comment,
     });
 
-    return this.reviewRepository.save(review);
+    const savedReview = await this.reviewRepository.save(review);
+
+    // Increment numReviews
+    await this.sellerRepository
+      .createQueryBuilder()
+      .update(SellerProfile)
+      .set({ numReviews: () => "numReviews + 1" })
+      .where("id = :sellerId", { sellerId: seller.id })
+      .execute();
+
+    return savedReview;
   }
 
   async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
@@ -82,15 +85,9 @@ export class ReviewService {
       hasMore: total > page * limit
     };
   }
-  async addReplyToReview(
-    reviewId: number,
-    sellerId: number,
-    comment: string
-  ): Promise<Review> {
-    const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
-      relations: ["seller"],
-    });
+
+  async addReplyToReview(reviewId: number, sellerId: number, comment: string): Promise<Review> {
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ["seller"] });
 
     if (!review) {
       throw new Error("Review not found");
@@ -104,25 +101,18 @@ export class ReviewService {
       throw new Error("Review already has a reply");
     }
 
-    review.reply = {
-      comment,
-      createdAt: new Date(),
-    };
+    review.reply = { comment, createdAt: new Date() };
 
     return this.reviewRepository.save(review);
   }
 
   async reportReview(reviewId: number, reporterId: number, reason: string) {
-    const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
-    });
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId } });
 
     if (!review) {
       throw new Error("Review not found");
     }
 
-    // Here you might want to create a separate ReviewReport entity
-    // For now, we'll just mark the review as reported
     review.reported = true;
     review.reportReason = reason;
     review.reporterId = reporterId;
@@ -131,10 +121,7 @@ export class ReviewService {
   }
 
   async deleteReview(reviewId: number, userId: number): Promise<void> {
-    const review = await this.reviewRepository.findOne({
-      where: { id: reviewId },
-      relations: ["buyer"],
-    });
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId }, relations: ["buyer", "seller"] });
 
     if (!review) {
       throw new Error("Review not found");
@@ -145,5 +132,13 @@ export class ReviewService {
     }
 
     await this.reviewRepository.remove(review);
+
+    // Decrement numReviews
+    await this.sellerRepository
+      .createQueryBuilder()
+      .update(SellerProfile)
+      .set({ numReviews: () => "numReviews - 1" })
+      .where("id = :sellerId", { sellerId: review.seller.id })
+      .execute();
   }
 }

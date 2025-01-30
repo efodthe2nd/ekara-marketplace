@@ -2,10 +2,18 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
 import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user/index';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { SellerProfile } from '../entities/SellerProfile';
+
 //import { ProductService } from '../services/ProductService';
 
+import { Repository } from 'typeorm';
+import { User } from '../entities/User';
+
 export class UserController {
-    constructor(private userService: UserService) {}
+    constructor(
+        private userService: UserService,
+        private userRepository: Repository<User>
+    ) {}
 
     register = async (req: Request, res: Response) => {
         try {
@@ -374,4 +382,38 @@ updateLocation = async (req: AuthRequest, res: Response) => {
     }
 };
 
+getSellerProfile = async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      console.log('Attempting to fetch seller profile for userId:', userId);
+      
+      const sellerProfile = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.sellerProfile', 'sellerProfile')
+        .where('user.id = :userId', { userId })
+        .getOne();
+
+      console.log('Query result:', sellerProfile); // Add this line
+  
+      if (!sellerProfile) {
+        console.log('User not found');
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (!sellerProfile.sellerProfile) {
+        console.log('Seller profile not found for user');
+        return res.status(404).json({ message: 'Seller profile not found' });
+      }
+  
+      const result = {
+        sellerId: sellerProfile.sellerProfile.id,
+        // Include other seller profile data as needed
+      };
+      console.log('Returning seller profile:', result);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching seller profile:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+}
 }

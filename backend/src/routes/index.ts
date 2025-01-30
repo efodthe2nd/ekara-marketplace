@@ -1,5 +1,6 @@
 // routes/index.ts
 import { Router } from 'express';
+import { authRouter } from './auth.routes';
 import { userRouter } from './user.routes';
 import { productRouter } from './product.routes';
 import { reviewRouter } from './review.routes';
@@ -17,13 +18,15 @@ export const AppRouter = (
 ): Router => {
     const router = Router();
 
+    const authRoutes = authRouter(userController);
     const userRoutes = userRouter(userController);
     const productRoutes = productRouter(productController);
     const categoryRoutes = categoryRouter(categoryController);
     const reviewRoutes = reviewRouter(reviewController);
     
 
-    router.use('/auth', userRoutes);
+    router.use('/auth', authRoutes);
+    router.use('/users', userRoutes);
     router.use('/products', productRoutes);
     router.use('/categories', categoryRoutes);
     router.use('/reviews', reviewRoutes);

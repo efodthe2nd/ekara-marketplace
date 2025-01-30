@@ -101,7 +101,10 @@ async function initializeApp() {
 
         // Initialize controllers
         console.log("Initializing controllers..."); 
-        const userController = new UserController(userService);
+        const userController = new UserController(
+            userService,
+            AppDataSource.getRepository(Entities.User)
+        );
         const productController = new ProductController(productService);
         const orderController = new OrderController(orderService);
         const categoryController = new CategoryController(categoryService);

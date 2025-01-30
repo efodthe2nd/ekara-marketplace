@@ -1,17 +1,12 @@
-import { Router } from 'express';
+import { Router, RequestHandler } from 'express';
 import { UserController } from '../controllers/UserController';
-import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authMiddleware, requireRole } from '../middleware/auth.middleware';
 import { uploadProfilePicture } from '../middleware/upload.middleware';
-import { RequestHandler } from 'express';
 
 export const userRouter = (userController: UserController): Router => {
     const router = Router();
 
-    // Public routes
-    router.post('/register', userController.register);
-    router.post('/login', userController.login);
-
-    // Get user public profile - move this after specific routes
+    // Profile routes
     router.get('/profile', authMiddleware, userController.getProfile as RequestHandler);
     router.put('/profile', authMiddleware, userController.updateProfile as RequestHandler);
     router.get('/roles', authMiddleware, userController.getUserRoles as RequestHandler);
@@ -31,30 +26,15 @@ export const userRouter = (userController: UserController): Router => {
         userController.updateLocation as RequestHandler
     );
 
-    // Role-specific routes
-    router.get('/buyer-dashboard', 
-        authMiddleware,
-        requireRole('buyer'),
-        userController.getProfile as RequestHandler
-    );
-
-    router.get('/seller-dashboard', 
-        authMiddleware,
-        requireRole('seller'),
-        userController.getProfile as RequestHandler
-    );
-
-    // Admin routes
-    router.get('/users', authMiddleware, userController.getAllUsers as RequestHandler);
-    
+    // Seller profile routes
     router.post('/seller-profile', 
         authMiddleware, 
         requireRole('seller'), 
         userController.createSellerProfile as RequestHandler
     );
 
-    // Public profile route - place at the end to avoid conflicts
-    router.get('/:userId', userController.getUserPublicProfile as RequestHandler);
+    // Public profile routes
+    router.get('/:userId/seller-profile', userController.getSellerProfile as RequestHandler);
 
     return router;
 };

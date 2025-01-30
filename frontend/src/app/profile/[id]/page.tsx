@@ -83,6 +83,7 @@ const ProfilePage = () => {
     return !viewedProfileId || viewedProfileId === user?.id?.toString();
   }, [viewedProfileId, user?.id]);
   const [viewedUser, setViewedUser] = useState<User | null>(null);
+  const [sellerProfileId, setSellerProfileId] = useState<number | null>(null);
   const [sellerStats, setSellerStats] = useState<{
     averageRating: number;
     totalReviews: number;
@@ -170,6 +171,7 @@ const ProfilePage = () => {
   //   fetchData();
   // }, [viewedProfileId, isOwnProfile]);
 
+
   useEffect(() => {
     const fetchSellerStats = async () => {
       if (user?.id && user.isSeller) {
@@ -238,6 +240,33 @@ const ProfilePage = () => {
     }
   }, []);
 
+  const fetchSellerProfile = useCallback(async (userId: string) => {
+    try {
+      console.log('Fetching seller profile for userId:', userId);
+      const response = await fetch(
+        `http://localhost:3000/api/users/${userId}/seller-profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        throw new Error(errorData.message || "Failed to fetch seller profile");
+      }
+  
+      const data = await response.json();
+      console.log('Received seller profile:', data);
+      setSellerProfileId(data.sellerId);
+    } catch (err) {
+      console.error("Error fetching seller profile:", err);
+      throw err; // Re-throw to handle in the component
+    }
+  }, []);
+
   const fetchProducts = useCallback(async () => {
     if ((user?.id && user.isSeller) || viewedProfileId) {
       try {
@@ -283,40 +312,66 @@ const ProfilePage = () => {
     }
   }, [viewedProfileId, user?.id, fetchUserData]);
 
-  const fetchReviews = async (pageNum: number = 1, append: boolean = false) => {
-    if (!user?.id && !viewedProfileId) return;
-
+  const fetchReviews = useCallback(async (pageNum: number = 1, append: boolean = false) => {
+    // Only proceed if we have a seller ID
+    if (!sellerProfileId) return;
+    
     setIsLoadingReviews(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/reviews/seller/${viewedProfileId || user?.id}/reviews?page=${pageNum}&limit=5`,
+        `http://localhost:3000/api/reviews/seller/${sellerProfileId}/reviews?page=${pageNum}&limit=5`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to fetch reviews");
       }
-
+  
       const data = await response.json();
-      console.log(data);
+      console.log('Received reviews data:', data);
+      
       setHasMore(data.hasMore);
-
+  
       if (append) {
         setReviews((prev) => [...prev, ...data.reviews]);
       } else {
         setReviews(data.reviews);
       }
     } catch (err) {
-      setReviewsError("Failed to load reviews");
       console.error("Error fetching reviews:", err);
+      setReviewsError("Failed to load reviews");
     } finally {
       setIsLoadingReviews(false);
     }
-  };
+  }, [sellerProfileId]);
+
+
+  useEffect(() => {
+    const profileId = getProfileId(viewedProfileId);
+    if (profileId) {
+      // First fetch the seller profile to get the seller ID
+      fetchSellerProfile(profileId);
+    }
+  }, [viewedProfileId, fetchSellerProfile]);
+  
+  // Add another useEffect to fetch reviews when we have the seller ID
+  useEffect(() => {
+    if (sellerProfileId) {
+      fetchReviews(1, false);
+    }
+  }, [sellerProfileId, fetchReviews]);
+
+  useEffect(() => {
+    if (viewedProfileId || user?.id) {
+      fetchReviews(1, false);
+    }
+  }, [viewedProfileId, user?.id, fetchReviews]);
+
+
 
   const loadMoreReviews = () => {
     if (!isLoadingReviews && hasMore) {
