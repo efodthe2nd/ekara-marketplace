@@ -27,3 +27,8 @@ export interface ErrorResponse {
   statusCode?: number;
   error?: string;
 }
+
+export interface loginData {
+  email: string;
+  password: string;
+}

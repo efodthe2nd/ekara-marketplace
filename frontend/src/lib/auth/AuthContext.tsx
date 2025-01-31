@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Debugging effect
-  useEffect(() => {
-    console.log('AuthContext user state:', user);
-  }, [user]);
+  // useEffect(() => {
+  //   console.log('AuthContext user state:', user);
+  // }, [user]);
 
   useEffect(() => {
     const checkAuth = async () => {
