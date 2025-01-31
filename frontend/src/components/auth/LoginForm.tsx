@@ -9,11 +9,6 @@ interface LoginFormProps {
   onSuccess?: () => void;
 }
 
-interface loginData {
-  email: string;
-  password: string;
-}
-
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

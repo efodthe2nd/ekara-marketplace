@@ -8,6 +8,16 @@ export const authRouter = (userController: UserController): Router => {
     // Auth-specific routes
     router.post('/register', userController.register);
     router.post('/login', userController.login);
+
+    router.get('/profile',
+        authMiddleware,
+        userController.getProfile as RequestHandler
+      );
+    
+    router.put('/profile',
+        authMiddleware,
+        userController.updateProfile as RequestHandler
+      );
     
     // Dashboard routes that should be under /auth
     router.get('/buyer-dashboard', 

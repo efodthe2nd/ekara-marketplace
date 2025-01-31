@@ -583,7 +583,8 @@ const ProfilePage = () => {
                   <h1 className="text-2xl font-bold text-gray-900">
                     {displayedUser?.sellerProfile?.companyName}
                   </h1>
-                  <p className="text-gray-500">{displayedUser?.username}</p>
+                  {/* <p className="text-gray-500">{displayedUser?.username}</p> */}
+                  <p className="text-gray-500 pt-2 text-sm">{displayedUser?.sellerProfile?.companyDescription}</p>
                   <div className="flex items-center mt-2 text-sm text-gray-500">
                     <MapPin className="h-4 w-4 mr-1" />
                     {isOwnProfile ? (
