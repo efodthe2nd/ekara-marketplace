@@ -8,6 +8,10 @@ export interface User {
   bio?: string;
   profilePicture?: string;
   location?: string;
+  sellerProfile?: {
+    companyName: string;
+    companyDescription: string;
+  };
 }
 
 export interface AuthResponse {
@@ -26,9 +30,4 @@ export interface ErrorResponse {
   message: string;
   statusCode?: number;
   error?: string;
-}
-
-export interface loginData {
-  email: string;
-  password: string;
 }
