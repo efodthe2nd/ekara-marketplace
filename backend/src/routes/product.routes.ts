@@ -7,10 +7,9 @@ import { upload } from '../middleware/upload.middleware';
 export const productRouter = (productController: ProductController): Router => {
     const router = Router();
 
-    router.get('/test', (req, res) => {
-        console.log('Test route hit');
-        res.json({ message: 'Test route works' });
-    });
+    router.get('/search',
+        productController.searchProducts as RequestHandler
+    );
 
     // Search and specific routes first
     router.get('/search/suggestions', 

@@ -189,50 +189,50 @@ const SettingsPage = () => {
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-  
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-  
-      const user = await response.json();
-      console.log('Updated User:', user); // Debugging log
-  
-      // Update form fields with existing values as fallback
-      setFormData((prevData) => ({
-        username: user.username ?? prevData.username,
-        email: user.email ?? prevData.email,
-        bio: user.bio ?? prevData.bio
-      }));
-  
-      setSuccess('Profile updated successfully');
-  
-      setTimeout(() => {
-        setSuccess('');
-      }, 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
-      setTimeout(() => {
-        setError('');
-      }, 3000);
-    } finally {
-      setIsLoading(false);
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
+  setSuccess('');
+
+  try {
+    const response = await fetch('http://localhost:3000/api/auth/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update profile');
     }
-  };
-  
+
+    const user = await response.json();
+    console.log('Updated User:', user); // Debugging log
+
+    // Update form fields with existing values as fallback
+    setFormData((prevData) => ({
+      username: user.username ?? prevData.username,
+      email: user.email ?? prevData.email,
+      bio: user.bio ?? prevData.bio
+    }));
+
+    setSuccess('Profile updated successfully');
+
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Failed to update profile');
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   
 
   return (

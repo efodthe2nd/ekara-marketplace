@@ -46,12 +46,13 @@ export function DashboardHeader({
       setSuggestions([]);
       return;
     }
+    
   
     const fetchData = async () => {
       try {
         setIsLoading(true);
         const response = await api.get<SuggestionResponse>(
-          `/api/products/suggestions?query=${encodeURIComponent(query)}`
+          `/api/products/search/suggestions?query=${encodeURIComponent(query)}`
         );
         setSuggestions(response.data.suggestions);
       } catch (error) {
