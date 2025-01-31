@@ -40,7 +40,7 @@ const SettingsPage = () => {
     companyName: string;
     companyDescription: string;
   }
-  
+
   const [formData, setFormData] = useState<UserFormData>({
     username: "",
     email: "",
@@ -67,7 +67,7 @@ const SettingsPage = () => {
         }
 
         const { user } = await response.json();
-        
+
         // Set the isSeller state
         setIsSeller(user.isSeller);
 
@@ -212,20 +212,22 @@ const SettingsPage = () => {
     setIsLoading(true);
     setError("");
     setSuccess("");
-  
+
     try {
       // Structure the data to match your UpdateUserDto
       const updateData = {
         username: formData.username,
         email: formData.email,
-        ...(isSeller ? {
-          companyName: formData.companyName,
-          companyDescription: formData.companyDescription,
-        } : {
-          bio: formData.bio
-        })
+        ...(isSeller
+          ? {
+              companyName: formData.companyName,
+              companyDescription: formData.companyDescription,
+            }
+          : {
+              bio: formData.bio,
+            }),
       };
-  
+
       const response = await fetch("http://localhost:3000/api/auth/profile", {
         method: "PUT",
         headers: {
@@ -234,16 +236,16 @@ const SettingsPage = () => {
         },
         body: JSON.stringify(updateData),
       });
-  
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Failed to update profile");
       }
-  
+
       // Update form with the returned user data
       const updatedUser = data.user; // Note: your API returns { message, user }
-      
+
       setFormData({
         username: updatedUser.username || "",
         email: updatedUser.email || "",
@@ -251,7 +253,7 @@ const SettingsPage = () => {
         companyName: updatedUser.sellerProfile?.companyName || "",
         companyDescription: updatedUser.sellerProfile?.companyDescription || "",
       });
-  
+
       setSuccess(data.message || "Profile updated successfully");
       setTimeout(() => {
         setSuccess("");
@@ -266,8 +268,6 @@ const SettingsPage = () => {
       setIsLoading(false);
     }
   };
-
-  
 
   return (
     <AuthProvider>
@@ -318,7 +318,7 @@ const SettingsPage = () => {
 
             {/* Content Area */}
             <div className="flex-1 bg-white rounded-xl shadow-sm p-8">
-            {activeSection === "profile" && (
+              {activeSection === "profile" && (
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-6">
                     Profile Settings
@@ -333,9 +333,15 @@ const SettingsPage = () => {
                       {success}
                     </div>
                   )}
-                  <form onSubmit={handleUpdateProfile} className="space-y-6">
-                    <div className="space-y-4">
-                      <div>
+                  <form onSubmit={handleUpdateProfile} className="space-y-8">
+                    {" "}
+                    {/* Increased from space-y-6 */}
+                    <div className="space-y-6">
+                      {" "}
+                      {/* Increased from space-y-4 */}
+                      <div className="space-y-2">
+                        {" "}
+                        {/* Added container with spacing */}
                         <label className="block text-sm font-medium text-gray-700">
                           Username
                         </label>
@@ -349,10 +355,10 @@ const SettingsPage = () => {
                               username: e.target.value,
                             }))
                           }
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                          className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3" /* Increased padding */
                         />
                       </div>
-                      <div>
+                      <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
                           Email
                         </label>
@@ -366,12 +372,12 @@ const SettingsPage = () => {
                               email: e.target.value,
                             }))
                           }
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                          className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3"
                         />
                       </div>
                       {isSeller ? (
                         <>
-                          <div>
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                               Company Name
                             </label>
@@ -385,10 +391,10 @@ const SettingsPage = () => {
                                   companyName: e.target.value,
                                 }))
                               }
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                              className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3"
                             />
                           </div>
-                          <div>
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                               Company Description
                             </label>
@@ -401,13 +407,13 @@ const SettingsPage = () => {
                                   companyDescription: e.target.value,
                                 }))
                               }
-                              rows={4}
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                              rows={5}
+                              className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3"
                             />
                           </div>
                         </>
                       ) : (
-                        <div>
+                        <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700">
                             Bio
                           </label>
@@ -420,17 +426,19 @@ const SettingsPage = () => {
                                 bio: e.target.value,
                               }))
                             }
-                            rows={4}
-                            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                            rows={5}
+                            className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3"
                           />
                         </div>
                       )}
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end pt-4">
+                      {" "}
+                      {/* Added padding top */}
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className={`bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors ${
+                        className={`bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors ${
                           isLoading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
