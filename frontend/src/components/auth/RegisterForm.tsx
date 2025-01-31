@@ -106,21 +106,16 @@ const RegisterForm = () => {
   };
 
   return (
-    <div
-      className="bg-white rounded-3xl shadow-xl overflow-hid
-    den max-w-4xl mx-auto"
-    >
-      <div className="flex h-[600px]">
+    <div className="bg-white rounded-3xl shadow-xl overflow-hidden max-w-4xl mx-auto my-8">
+      <div className="flex flex-col md:flex-row min-h-[600px]">
         {/* Left Panel */}
-        <div className="bg-[#111827] p-10 text-white w-[400px]">
+        <div className="bg-[#111827] p-10 text-white w-full md:w-[400px] flex flex-col">
           <h2 className="text-4xl font-semibold mb-12">Welcome</h2>
 
           <div className="space-y-6 mb-16">
             <button
               type="button"
-              onClick={() =>
-                setFormData((prev) => ({ ...prev, role: "buyer" }))
-              }
+              onClick={() => setFormData((prev) => ({ ...prev, role: "buyer" }))}
               className={`w-full py-4 rounded-xl transition-all ${
                 formData.role === "buyer"
                   ? "bg-white text-[#111827]"
@@ -131,9 +126,7 @@ const RegisterForm = () => {
             </button>
             <button
               type="button"
-              onClick={() =>
-                setFormData((prev) => ({ ...prev, role: "seller" }))
-              }
+              onClick={() => setFormData((prev) => ({ ...prev, role: "seller" }))}
               className={`w-full py-4 rounded-xl transition-all ${
                 formData.role === "seller"
                   ? "bg-white text-[#111827]"
@@ -144,17 +137,13 @@ const RegisterForm = () => {
             </button>
           </div>
 
-          {/* Progress Steps */}
-          <div className="space-y-6">
+          <div className="space-y-6 mt-auto">
             {[
               { num: 1, text: "Account Details" },
               { num: 2, text: "Personal Information" },
               {
                 num: 3,
-                text:
-                  formData.role === "seller"
-                    ? "Business Details"
-                    : "Additional Details",
+                text: formData.role === "seller" ? "Business Details" : "Additional Details",
               },
             ].map((item) => (
               <div key={item.num} className="flex items-center">
@@ -174,14 +163,14 @@ const RegisterForm = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="flex-1 p-16">
+        <div className="flex-1 p-8 md:p-16 flex flex-col">
           <h3 className="text-3xl font-semibold text-gray-900 mb-8">
             Create Your Account
           </h3>
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 flex-1">
             {step === 1 && (
               <>
                 <div>
@@ -455,7 +444,7 @@ const RegisterForm = () => {
               </>
             )}
           </form>
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{" "}
             <a href="/auth/login" className="text-blue-600 hover:underline">
               Log in
