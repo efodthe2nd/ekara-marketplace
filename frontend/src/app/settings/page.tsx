@@ -18,6 +18,7 @@ const SettingsPage = () => {
   const [activeSection, setActiveSection] = useState("profile");
   const router = useRouter();
   const { logout } = useAuth();
+  const [isSeller, setIsSeller] = useState(false);
 
   const sections = [
     { id: "profile", label: "Profile", icon: User },
@@ -32,10 +33,20 @@ const SettingsPage = () => {
     router.push("/auth/login");
   };
 
-  const [formData, setFormData] = useState({
+  interface UserFormData {
+    username: string;
+    email: string;
+    bio: string;
+    companyName: string;
+    companyDescription: string;
+  }
+  
+  const [formData, setFormData] = useState<UserFormData>({
     username: "",
     email: "",
     bio: "",
+    companyName: "",
+    companyDescription: "",
   });
 
   useEffect(() => {
@@ -56,18 +67,24 @@ const SettingsPage = () => {
         }
 
         const { user } = await response.json();
+        
+        // Set the isSeller state
+        setIsSeller(user.isSeller);
 
-        // Only update if we have actual data
-        if (user) {
-          setFormData({
-            username: user.username || "",
-            email: user.email || "",
-            bio: user.bio || "",
-          });
-        }
+        // Update form data based on user type
+        setFormData({
+          username: user.username || "",
+          email: user.email || "",
+          bio: user.bio || "",
+          companyName: user.sellerProfile?.companyName || "",
+          companyDescription: user.sellerProfile?.companyDescription || "",
+        });
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError("Failed to load user data");
+        setTimeout(() => {
+          setError("");
+        }, 3000);
       }
     };
 
@@ -113,6 +130,8 @@ const SettingsPage = () => {
           username: user.username || "",
           email: user.email || "",
           bio: user.bio || "",
+          companyName: user.sellerProfile?.companyName || "",
+          companyDescription: user.sellerProfile?.companyDescription || "",
         });
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -189,49 +208,64 @@ const SettingsPage = () => {
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError('');
-  setSuccess('');
-
-  try {
-    const response = await fetch('http://localhost:3000/api/auth/profile', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(formData)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update profile');
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+  
+    try {
+      // Structure the data to match your UpdateUserDto
+      const updateData = {
+        username: formData.username,
+        email: formData.email,
+        ...(isSeller ? {
+          companyName: formData.companyName,
+          companyDescription: formData.companyDescription,
+        } : {
+          bio: formData.bio
+        })
+      };
+  
+      const response = await fetch("http://localhost:3000/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(updateData),
+      });
+  
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update profile");
+      }
+  
+      // Update form with the returned user data
+      const updatedUser = data.user; // Note: your API returns { message, user }
+      
+      setFormData({
+        username: updatedUser.username || "",
+        email: updatedUser.email || "",
+        bio: updatedUser.bio || "",
+        companyName: updatedUser.sellerProfile?.companyName || "",
+        companyDescription: updatedUser.sellerProfile?.companyDescription || "",
+      });
+  
+      setSuccess(data.message || "Profile updated successfully");
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      console.error("Profile update error:", err);
+      setError(err instanceof Error ? err.message : "Failed to update profile");
+      setTimeout(() => {
+        setError("");
+      }, 3000);
+    } finally {
+      setIsLoading(false);
     }
-
-    const user = await response.json();
-    console.log('Updated User:', user); // Debugging log
-
-    // Update form fields with existing values as fallback
-    setFormData((prevData) => ({
-      username: user.username ?? prevData.username,
-      email: user.email ?? prevData.email,
-      bio: user.bio ?? prevData.bio
-    }));
-
-    setSuccess('Profile updated successfully');
-
-    setTimeout(() => {
-      setSuccess('');
-    }, 3000);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Failed to update profile');
-    setTimeout(() => {
-      setError('');
-    }, 3000);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   
 
@@ -284,7 +318,7 @@ const SettingsPage = () => {
 
             {/* Content Area */}
             <div className="flex-1 bg-white rounded-xl shadow-sm p-8">
-              {activeSection === "profile" && (
+            {activeSection === "profile" && (
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-6">
                     Profile Settings
@@ -303,7 +337,7 @@ const SettingsPage = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Name
+                          Username
                         </label>
                         <input
                           type="text"
@@ -335,23 +369,62 @@ const SettingsPage = () => {
                           className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Bio
-                        </label>
-                        <textarea
-                          name="bio"
-                          value={formData.bio}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              bio: e.target.value,
-                            }))
-                          }
-                          rows={4}
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
-                        />
-                      </div>
+                      {isSeller ? (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Company Name
+                            </label>
+                            <input
+                              type="text"
+                              name="companyName"
+                              value={formData.companyName}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  companyName: e.target.value,
+                                }))
+                              }
+                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Company Description
+                            </label>
+                            <textarea
+                              name="companyDescription"
+                              value={formData.companyDescription}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  companyDescription: e.target.value,
+                                }))
+                              }
+                              rows={4}
+                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Bio
+                          </label>
+                          <textarea
+                            name="bio"
+                            value={formData.bio}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                bio: e.target.value,
+                              }))
+                            }
+                            rows={4}
+                            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 pl-4"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="flex justify-end">
                       <button
