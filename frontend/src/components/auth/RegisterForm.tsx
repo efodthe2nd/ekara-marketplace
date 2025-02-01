@@ -360,6 +360,21 @@ const RegisterForm = () => {
 
                     <div>
                       <label className="block text-sm text-gray-700 mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        name="phoneNumber"
+                        type="tel"
+                        value={formData.phoneNumber || ""}
+                        onChange={handleInputChange}
+                        className="w-full p-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm text-gray-900 placeholder-gray-500"
+                        placeholder="Enter phone number"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-2">
                         Company Description
                       </label>
                       <textarea

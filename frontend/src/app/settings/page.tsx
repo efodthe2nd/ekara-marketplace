@@ -37,6 +37,7 @@ const SettingsPage = () => {
     username: string;
     email: string;
     bio: string;
+    phoneNumber: string;
     companyName: string;
     companyDescription: string;
   }
@@ -45,6 +46,7 @@ const SettingsPage = () => {
     username: "",
     email: "",
     bio: "",
+    phoneNumber: "",
     companyName: "",
     companyDescription: "",
   });
@@ -76,6 +78,7 @@ const SettingsPage = () => {
           username: user.username || "",
           email: user.email || "",
           bio: user.bio || "",
+          phoneNumber: user.sellerProfile?.phoneNumber || "",
           companyName: user.sellerProfile?.companyName || "",
           companyDescription: user.sellerProfile?.companyDescription || "",
         });
@@ -130,6 +133,7 @@ const SettingsPage = () => {
           username: user.username || "",
           email: user.email || "",
           bio: user.bio || "",
+          phoneNumber: user.sellerProfile?.phoneNumber || "",
           companyName: user.sellerProfile?.companyName || "",
           companyDescription: user.sellerProfile?.companyDescription || "",
         });
@@ -220,6 +224,7 @@ const SettingsPage = () => {
         email: formData.email,
         ...(isSeller
           ? {
+              phoneNumber: formData.phoneNumber,
               companyName: formData.companyName,
               companyDescription: formData.companyDescription,
             }
@@ -249,6 +254,7 @@ const SettingsPage = () => {
       setFormData({
         username: updatedUser.username || "",
         email: updatedUser.email || "",
+        phoneNumber: updatedUser.sellerProfile?.phoneNumber || "",
         bio: updatedUser.bio || "",
         companyName: updatedUser.sellerProfile?.companyName || "",
         companyDescription: updatedUser.sellerProfile?.companyDescription || "",
@@ -377,6 +383,23 @@ const SettingsPage = () => {
                       </div>
                       {isSeller ? (
                         <>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              PhoneNumber
+                            </label>
+                            <input
+                              type="phonenumber"
+                              name="phonenumber"
+                              value={formData.phoneNumber}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  email: e.target.value,
+                                }))
+                              }
+                              className="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 px-4 py-3"
+                            />
+                          </div>
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                               Company Name
