@@ -27,7 +27,5 @@ export class BuyerProfile {
     wishlist: number[];
 
     @Column({ nullable: true })
-    phoneNumber: number; 
-
-    
+    phoneNumber: string; 
 }

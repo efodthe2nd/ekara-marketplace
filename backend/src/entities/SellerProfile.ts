@@ -45,5 +45,5 @@ export class SellerProfile {
   userId: number;
 
   @Column({ nullable: true })
-  phoneNumber: number;
+  phoneNumber: string;
 }
