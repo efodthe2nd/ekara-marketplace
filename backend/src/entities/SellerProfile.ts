@@ -43,4 +43,7 @@ export class SellerProfile {
 
   @Column({ nullable: true })
   userId: number;
+
+  @Column({ nullable: true })
+  phoneNumber: number;
 }

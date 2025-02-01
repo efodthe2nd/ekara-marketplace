@@ -26,7 +26,8 @@ export class BuyerProfile {
     @Column('simple-array', { nullable: true })
     wishlist: number[];
 
-    
+    @Column({ nullable: true })
+    phoneNumber: number; 
 
     
 }
