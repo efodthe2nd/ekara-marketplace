@@ -11,4 +11,8 @@ export class CreateSellerProfileDto {
     @IsString()
     @IsOptional()
     website?: string;
+
+    @IsString()
+    @IsOptional()
+    phoneNumber?: string;
 }

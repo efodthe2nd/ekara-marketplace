@@ -177,35 +177,38 @@ export class UserService {
 }
 
   // Add this method to UserService class
-  async createSellerProfile(
-    userId: number,
-    profileData: CreateSellerProfileDto
-  ): Promise<SellerProfile> {
-    const user = await this.getUserById(userId);
+  // UserService.ts
+async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): Promise<SellerProfile> {
+  const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['sellerProfile']
+  });
 
-    if (!user.isSeller) {
-      throw new Error("User is not a seller");
-    }
-
-    let sellerProfile = await this.sellerProfileRepository.findOne({
-      where: { user: { id: userId } },
-    });
-
-    if (sellerProfile) {
-      // Update existing profile
-      Object.assign(sellerProfile, profileData);
-      return await this.sellerProfileRepository.save(sellerProfile);
-    }
-
-    // Create new profile
-    const newProfile = new SellerProfile();
-    Object.assign(newProfile, {
-      ...profileData,
-      user,
-    });
-
-    return await this.sellerProfileRepository.save(newProfile);
+  if (!user) {
+      throw new Error('User not found');
   }
+
+  if (user.sellerProfile) {
+      throw new Error('User already has a seller profile');
+  }
+
+  // Create new seller profile
+  const sellerProfile = new SellerProfile();
+  sellerProfile.user = user;
+  sellerProfile.companyName = profileData.companyName;
+  sellerProfile.companyDescription = profileData.companyDescription || '';
+  sellerProfile.phoneNumber = profileData.phoneNumber || '';
+
+  // Save seller profile
+  const savedProfile = await this.sellerProfileRepository.save(sellerProfile);
+
+  // Update user's isSeller status
+  user.isSeller = true;
+  await this.userRepository.save(user);
+
+  return savedProfile;
+}
+
   async updateUser(
     userId: number,
     updateUserDto: UpdateUserDto

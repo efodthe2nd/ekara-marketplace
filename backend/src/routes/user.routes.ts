@@ -29,7 +29,6 @@ export const userRouter = (userController: UserController): Router => {
     // Seller profile routes
     router.post('/seller-profile', 
         authMiddleware, 
-        requireRole('seller'), 
         userController.createSellerProfile as RequestHandler
     );
 
