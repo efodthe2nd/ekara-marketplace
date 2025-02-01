@@ -31,7 +31,9 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
   });
 
   //add to form state
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
 
   // Image handling states
   const [images, setImages] = useState<File[]>([]);
@@ -40,7 +42,6 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
   const [imageError, setImageError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
 
   const validateImage = (file: File): string | null => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
@@ -93,13 +94,12 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
-  
+    setError("");
+
     try {
       //create new form object
       const formDataToSend = new FormData();
 
-      
       // Add product data as a JSON string
       const productData = {
         name: formData.name.trim(),
@@ -113,51 +113,53 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
         weight: Number(formData.weight),
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
-        condition: formData.condition
+        condition: formData.condition,
       };
       //Log what we're seeing
-      console.log('Product Data:', productData);
-      console.log('Images:', images);
-  
+      console.log("Product Data:", productData);
+      console.log("Images:", images);
+
       //add the data to the new form object
-      formDataToSend.append('productData', JSON.stringify(productData));
-  
+      formDataToSend.append("productData", JSON.stringify(productData));
+
       // Add images
       images.forEach((image) => {
-        formDataToSend.append('images', image);
+        formDataToSend.append("images", image);
       });
 
       for (const pair of formDataToSend.entries()) {
         console.log(pair[0], pair[1]);
       }
-  
-      const response = await fetch('http://localhost:3000/api/products', {
-        method: 'POST',
+
+      const response = await fetch("http://localhost:3000/api/products", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: formDataToSend
+        body: formDataToSend,
       });
 
       // Log the full response
-    console.log('Response status:', response.status);
-    const responseData = await response.json();
-    console.log('Response data:', responseData);
-  
+      console.log("Response status:", response.status);
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to create product');
+        throw new Error("Failed to create product");
       }
-  
+
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error creating product:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create product');
+      console.error("Error creating product:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to create product"
+      );
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   if (!isOpen) return null;
 
   return (
@@ -177,7 +179,15 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
           <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
