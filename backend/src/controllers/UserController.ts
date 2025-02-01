@@ -133,23 +133,6 @@ export class UserController {
         }
     };
 
-    // getSellerProducts = async (req: AuthRequest, res: Response) => {
-    //     try {
-    //         const sellerId = parseInt(req.params.id);
-    //         if (!sellerId) {
-    //             return res.status(400).json({ message: 'Invalid seller ID' });
-    //         }
-
-    //         const products = await this.productService.getProductsBySellerId(sellerId);
-    //         res.json(products);
-    //     } catch (error: any) {
-    //         console.error('Error fetching seller products:', error);
-    //         res.status(500).json({
-    //             message: error.message || 'Error fetching seller products'
-    //         });
-    //     }
-    // };
-
     // New endpoints for role management
     addRole = async (req: AuthRequest, res: Response) => {
         try {
@@ -210,7 +193,7 @@ export class UserController {
         }
     };
 
-    //Add this method to UserController class
+
     createSellerProfile = async (req: AuthRequest, res: Response) => {
         console.log('Creating seller profile:', {
             userId: req.user?.id,

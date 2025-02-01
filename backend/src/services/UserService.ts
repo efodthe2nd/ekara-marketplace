@@ -195,6 +195,7 @@ async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): 
   // Create new seller profile
   const sellerProfile = new SellerProfile();
   sellerProfile.user = user;
+  sellerProfile.userId = user.id;
   sellerProfile.companyName = profileData.companyName;
   sellerProfile.companyDescription = profileData.companyDescription || '';
   sellerProfile.phoneNumber = profileData.phoneNumber || '';
@@ -204,9 +205,19 @@ async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): 
 
   // Update user's isSeller status
   user.isSeller = true;
+  user.sellerProfile = savedProfile;
   await this.userRepository.save(user);
 
-  return savedProfile;
+const foundProfile = await this.sellerProfileRepository.findOne({
+  where: { id: savedProfile.id },
+  relations: ['user']
+});
+
+if (!foundProfile) {
+  throw new Error('Seller profile not found');
+}
+
+return foundProfile;
 }
 
   async updateUser(

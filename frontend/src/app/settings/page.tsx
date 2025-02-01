@@ -175,7 +175,22 @@ const SettingsPage = () => {
     setSuccess("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/seller-profile", {
+      // First, add the seller role
+      const roleResponse = await fetch("http://localhost:3000/api/users/roles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ role: "seller" }),
+      });
+
+      if (!roleResponse.ok) {
+        throw new Error("Failed to add seller role");
+      }
+
+      // Then create the seller profile
+      const response = await fetch("http://localhost:3000/api/users/seller-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -191,8 +206,8 @@ const SettingsPage = () => {
       }
 
       setSuccess("Seller profile created successfully!");
-      setIsSeller(true); // Update the seller status
-      setActiveSection("profile"); // Redirect to profile section
+      setIsSeller(true);
+      setActiveSection("profile");
 
       // Update the main form data with seller information
       setFormData(prev => ({
@@ -212,7 +227,7 @@ const SettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+};
 
 
   // Add these state variables for password fields
