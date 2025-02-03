@@ -139,15 +139,14 @@ const SellPartModal = ({
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+  
     try {
-      const formDataToSend = new FormData();
+      // Prepare product data without images
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
         manufacturer: formData.manufacturer.trim(),
-        category: selectedCategory?.name || "",
         categoryId: selectedCategory?.id,
         compatibility: formData.compatibility.trim(),
         dimensions: formData.dimensions.trim(),
@@ -156,54 +155,60 @@ const SellPartModal = ({
         stock: Number(formData.stock),
         condition: formData.condition || "new",
       };
+  
+      console.log('Sending Product Data:', productData); // Detailed logging
+  
+      const response = await fetch(
+        `http://localhost:3000/api/products/${product?.id}`, 
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(productData)
+        }
+      );
+  
+      console.log('Response Status:', response.status);
       
-
-      formDataToSend.append("productData", JSON.stringify(productData));
-      images.forEach((image) => {
-        formDataToSend.append("images", image);
-      });
-
-      const url =
-        mode === "create"
-          ? "http://localhost:3000/api/products"
-          : `http://localhost:3000/api/products/${product?.id}`;
-
-      const method = mode === "create" ? "POST" : "PUT";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formDataToSend,
-      });
-
-      console.log('Response Status:', response.status); // Debug log
-    const responseData = await response.json();
-    console.log('Response Data:', responseData); // Debug log
-
-
+      const responseData = await response.json();
+      console.log('Response Data:', responseData);
+  
       if (!response.ok) {
-        throw new Error(
-          mode === "create"
-            ? "Failed to create product"
-            : "Failed to update product"
-        );
+        throw new Error(responseData.message || "Failed to update product");
       }
-
+  
+      // Separate image upload if needed
+      if (images.length > 0) {
+        const imageFormData = new FormData();
+        images.forEach((image) => {
+          imageFormData.append("images", image);
+        });
+  
+        const imageUploadResponse = await fetch(
+          `http://localhost:3000/api/products/${product?.id}/images`, 
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: imageFormData
+          }
+        );
+  
+        if (!imageUploadResponse.ok) {
+          const errorData = await imageUploadResponse.json();
+          throw new Error(errorData.message || "Failed to upload images");
+        }
+      }
+  
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Update Product Error:', error);
-      console.error(
-        mode === "create"
-          ? "Error creating product:"
-          : "Error updating product:",
-        error
-      );
+      console.error('Complete Update Error:', error);
       setError(
-        error instanceof Error ? error.message : `Failed to ${mode} product`
+        error instanceof Error ? error.message : `Failed to update product`
       );
     } finally {
       setIsLoading(false);

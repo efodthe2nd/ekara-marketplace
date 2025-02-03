@@ -103,25 +103,40 @@ export class ProductController {
 
   public updateProduct = async (req: Request, res: Response): Promise<void> => {
     try {
+      console.log('Received Headers:', req.headers);
+      console.log('Received Body:', req.body);
+      console.log('Received Params:', req.params);
+  
+      // Validate input
+      if (!req.body) {
+        res.status(400).json({ message: "No product data provided" });
+        return;
+      }
+  
       const updateDto: UpdateProductDto = req.body;
-      // Convert the DTO to match what the service expects
+      console.log('Parsed Update DTO:', updateDto);
+  
       const productUpdateData: Partial<Product> = {
         ...updateDto,
-        // If categoryId is provided, it will be used directly
-        // Remove any category string if it exists in the request
         category: undefined,
       };
-
+  
+      console.log('Product Update Data:', productUpdateData);
+  
       const product = await this.productService.updateProduct(
         Number(req.params.id),
         productUpdateData
       );
       res.json(product);
     } catch (error: any) {
-      res.status(400).json({ message: error?.message || "An error occurred" });
+      console.error('Update Product Error:', error);
+      res.status(400).json({ 
+        message: error?.message || "An error occurred",
+        error: error.toString() 
+      });
     }
   };
-
+  
   public deleteProduct = async (req: Request, res: Response): Promise<void> => {
     try {
       await this.productService.deleteProduct(Number(req.params.id));
@@ -160,6 +175,8 @@ export class ProductController {
         .json({ message: error?.message || "Image upload failed" });
     }
   };
+
+  
 
   public getSuggestions = async (
     req: Request,
