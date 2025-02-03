@@ -33,8 +33,8 @@ export const userRouter = (userController: UserController): Router => {
     );
 
     // Public profile routes
-    router.get('/:userId/seller-profile', userController.getSellerProfile as RequestHandler);
     router.get('/seller/:userId/stats', userController.getSellerStats as RequestHandler);
+    router.get('/:userId/seller-profile', userController.getSellerProfile as RequestHandler);
 
     return router;
 };

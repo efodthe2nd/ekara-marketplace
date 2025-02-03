@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Product } from "@/types/product";
 import Image from "next/image";
+import SellPartModal from "@/components/products/CreatePartModal";
 import {
   X,
+  Pencil,
   Package,
   Truck,
   Shield,
@@ -21,7 +23,9 @@ interface ProductModalProps {
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const { user } = useAuth();
   const router = useRouter();
+  const isProductOwner = user?.id === product.seller?.user?.id;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const getImageUrl = (imageName: string) => {
     if (imageName.startsWith("data:image")) {
@@ -49,6 +53,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     }
   };
 
+  const handleEditClick = () => {
+    setShowEditModal(true);
+  };
+
   const imageSrc =
     product.images && product.images.length > 0
       ? getImageUrl(product.images[currentImageIndex])
@@ -64,7 +72,26 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      {isProductOwner && (
+        <button
+          onClick={handleEditClick}
+          className="absolute top-4 right-14 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50 group"
+        >
+          <Pencil className="h-6 w-6" />
+          <span className="absolute hidden group-hover:block right-full mr-2 bg-gray-800 text-white text-sm px-2 py-1 rounded whitespace-nowrap">
+            Edit Product
+          </span>
+        </button>
+      )}
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50"
@@ -245,6 +272,19 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
           </div>
         </div>
       </div>
+      {showEditModal && (
+        <SellPartModal
+          isOpen={true}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => {
+            setShowEditModal(false);
+            // You might want to refresh the product data here
+            onClose();
+          }}
+          product={product}
+          mode="edit"
+        />
+      )}
     </div>
   );
 };

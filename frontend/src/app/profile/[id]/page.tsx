@@ -59,7 +59,9 @@ const ProfilePage = () => {
   //const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const viewedProfileId = params?.id || searchParams.get("id");
+  const viewedProfileId: string | string[] | null = params?.id || searchParams.get("id") || user?.id?.toString() || null;
+  console.log(viewedProfileId);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const getProfileId = (id: string | string[] | null): string | null => {
     if (!id) return null;
@@ -107,6 +109,7 @@ const ProfilePage = () => {
     viewedProfileId && viewedProfileId !== user?.id?.toString()
       ? viewedUser
       : user;
+  console.log("Displayed user:", displayedUser);
 
   // State for editable location
   const [isEditingLocation, setIsEditingLocation] = useState(false);
@@ -157,7 +160,7 @@ const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    const profileId = getProfileId(viewedProfileId);
+    const profileId = getProfileId(viewedProfileId as string | string[] | null);
     // For viewed profile
     if (profileId) {
       fetchSellerProfileAndStats(profileId);
@@ -395,10 +398,10 @@ const ProfilePage = () => {
   }, [sellerProfileId, fetchReviews]);
 
   useEffect(() => {
-    if (sellerProfileId) {
-      fetchSellerStats(sellerProfileId.toString());
+    if (user?.id && user.isSeller) {
+      fetchSellerStats(user.id.toString());
     }
-  }, [sellerProfileId, fetchSellerStats]);
+  }, [user, fetchSellerStats]);
 
   useEffect(() => {
     if (viewedProfileId || user?.id) {
@@ -707,7 +710,7 @@ const ProfilePage = () => {
                 {error}
               </div>
             ) : products.length === 0 ? (
-              <div className="col-span-full text-center py-8">
+              <div className="col-span-full text-center py-8 text-gray-500">
                 No products found. Start selling by adding your first product!
               </div>
             ) : (

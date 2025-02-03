@@ -414,6 +414,8 @@ getSellerStats = async (req: Request, res: Response): Promise<void> => {
         relations: ['sellerProfile'],
       });
 
+      console.log('Fetched user with seller profile:', userWithSeller);
+
       if (!userWithSeller) {
         res.status(404).json({ message: 'User not found' });
         return;

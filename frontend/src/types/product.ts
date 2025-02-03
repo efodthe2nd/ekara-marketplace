@@ -22,10 +22,10 @@ interface Category {
 
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  price: string;  // Keeping as string to match backend
+  price: number;  // Keeping as string to match backend
   manufacturer: string;
   images: string[];
   category: string;
@@ -37,6 +37,7 @@ export interface Product {
   warranty: string;
   stock: number;
   createdAt: string;
+  condition?: string;
   updatedAt: string;
   seller?: {
     id: number;

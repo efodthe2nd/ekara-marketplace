@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
+import { Product } from "@/types/product"; 
+
+
+
+
 
 interface SellPartModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  product?: Product;
+  mode?: 'create' | 'edit';
 }
 
 // Image validation constants
@@ -15,24 +22,28 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILES = 5;
 
-const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
+const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }: SellPartModalProps) => {
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    manufacturer: "",
-    category: "",
-    compatibility: "",
-    dimensions: "",
-    weight: "",
-    warranty: "",
-    stock: "",
-    condition: "new",
+    name: product?.name || "",
+    description: product?.description || "",
+    price: product?.price?.toString() || "",
+    manufacturer: product?.manufacturer || "",
+    category: product?.categoryRelation?.name || "",
+    compatibility: product?.compatibility || "",
+    dimensions: product?.dimensions || "",
+    weight: product?.weight?.toString() || "",
+    warranty: product?.warranty || "",
+    stock: product?.stock?.toString() || "",
+    condition: product?.condition || "new",
   });
 
-  //add to form state
+  // Initialize selected category if editing
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
+    product?.categoryRelation ? {
+      id: product.categoryRelation.id,
+      name: product.categoryRelation.name,
+      level: 0 // Add a default level if not available
+    } : null
   );
 
   // Image handling states
@@ -52,6 +63,33 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
     }
     return null;
   };
+
+  useEffect(() => {
+    // Always set initial state, even if product is undefined
+    const initialImages = product?.images ?? [];
+    if (initialImages.length > 0) {
+      const imageUrls = initialImages.map(img => getImageUrl(img));
+      setPreviews(imageUrls);
+  
+      // Fetch image files
+      const fetchImages = async () => {
+        try {
+          const imageFiles = await Promise.all(
+            initialImages.map(async (img) => {
+              const response = await fetch(getImageUrl(img));
+              const blob = await response.blob();
+              return new File([blob], img.split('/').pop() || 'image', { type: blob.type });
+            })
+          );
+          setImages(imageFiles);
+        } catch (error) {
+          console.error('Error fetching images:', error);
+        }
+      };
+  
+      fetchImages();
+    }
+  }, [product]); 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -90,17 +128,15 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
     setPreviews(newPreviews);
     URL.revokeObjectURL(previews[index]);
   };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+  
     try {
-      //create new form object
       const formDataToSend = new FormData();
-
-      // Add product data as a JSON string
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -113,54 +149,64 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
         weight: Number(formData.weight),
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
-        condition: formData.condition,
+        condition: formData.condition || "new",
       };
-      //Log what we're seeing
-      console.log("Product Data:", productData);
-      console.log("Images:", images);
-
-      //add the data to the new form object
+  
       formDataToSend.append("productData", JSON.stringify(productData));
-
-      // Add images
       images.forEach((image) => {
         formDataToSend.append("images", image);
       });
-
-      for (const pair of formDataToSend.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
-      const response = await fetch("http://localhost:3000/api/products", {
-        method: "POST",
+  
+      const url = mode === 'create' 
+        ? "http://localhost:3000/api/products"
+        : `http://localhost:3000/api/products/${product?.id}`;
+      
+      const method = mode === 'create' ? 'POST' : 'PUT';
+  
+      const response = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: formDataToSend,
       });
-
-      // Log the full response
-      console.log("Response status:", response.status);
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-
+  
       if (!response.ok) {
-        throw new Error("Failed to create product");
+        throw new Error(mode === 'create' ? "Failed to create product" : "Failed to update product");
       }
-
+  
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error(mode === 'create' ? "Error creating product:" : "Error updating product:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to create product"
+        error instanceof Error ? error.message : `Failed to ${mode} product`
       );
     } finally {
       setIsLoading(false);
     }
+    
   };
 
+  useEffect(() => {
+    if (product?.images) {
+      setPreviews(product.images.map(img => getImageUrl(img)));
+    }
+  }, [product]);
+
   if (!isOpen) return null;
+
+  const getImageUrl = (imageName: string) => {
+    if (imageName.startsWith("data:image")) {
+      return imageName;
+    }
+    if (imageName.startsWith("http://") || imageName.startsWith("https://")) {
+      return imageName;
+    }
+    return imageName.startsWith("/") ? imageName : `/uploads/${imageName}`;
+  };
+
+  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -420,16 +466,16 @@ const SellPartModal = ({ isOpen, onClose, onSuccess }: SellPartModalProps) => {
               Cancel
             </button>
             <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                "Create Part"
-              )}
-            </button>
+  type="submit"
+  disabled={isLoading}
+  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+>
+  {isLoading ? (
+    <Loader2 className="h-5 w-5 animate-spin" />
+  ) : (
+    (mode === 'create' ? "Create Part" : "Update Part")
+  )}
+</button>
           </div>
         </form>
       </div>

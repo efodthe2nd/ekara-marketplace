@@ -10,6 +10,7 @@ export interface User {
   location?: string;
   sellerProfile?: {
     companyName: string;
+    phoneNumber: string;
     companyDescription: string;
   };
 }
