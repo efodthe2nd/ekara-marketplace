@@ -3,18 +3,14 @@
 import { useState, useEffect } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
-import { Product } from "@/types/product"; 
-
-
-
-
+import { Product } from "@/types/product";
 
 interface SellPartModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   product?: Product;
-  mode?: 'create' | 'edit';
+  mode?: "create" | "edit";
 }
 
 // Image validation constants
@@ -22,7 +18,13 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILES = 5;
 
-const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }: SellPartModalProps) => {
+const SellPartModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  product,
+  mode = "create",
+}: SellPartModalProps) => {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
@@ -39,11 +41,13 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
 
   // Initialize selected category if editing
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    product?.categoryRelation ? {
-      id: product.categoryRelation.id,
-      name: product.categoryRelation.name,
-      level: 0 // Add a default level if not available
-    } : null
+    product?.categoryRelation
+      ? {
+          id: product.categoryRelation.id,
+          name: product.categoryRelation.name,
+          level: 0, // Add a default level if not available
+        }
+      : null
   );
 
   // Image handling states
@@ -64,13 +68,24 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
     return null;
   };
 
+  const getImageUrl = (imageName: string) => {
+    if (!imageName) return '';
+    if (imageName.startsWith("data:image")) {
+      return imageName;
+    }
+    if (imageName.startsWith("http://") || imageName.startsWith("https://")) {
+      return imageName;
+    }
+    return imageName.startsWith("/") ? imageName : `/uploads/${imageName}`;
+  };
+
   useEffect(() => {
     // Always set initial state, even if product is undefined
     const initialImages = product?.images ?? [];
     if (initialImages.length > 0) {
-      const imageUrls = initialImages.map(img => getImageUrl(img));
+      const imageUrls = initialImages.map((img) => getImageUrl(img));
       setPreviews(imageUrls);
-  
+
       // Fetch image files
       const fetchImages = async () => {
         try {
@@ -78,18 +93,20 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
             initialImages.map(async (img) => {
               const response = await fetch(getImageUrl(img));
               const blob = await response.blob();
-              return new File([blob], img.split('/').pop() || 'image', { type: blob.type });
+              return new File([blob], img.split("/").pop() || "image", {
+                type: blob.type,
+              });
             })
           );
           setImages(imageFiles);
         } catch (error) {
-          console.error('Error fetching images:', error);
+          console.error("Error fetching images:", error);
         }
       };
-  
+
       fetchImages();
     }
-  }, [product]); 
+  }, [product]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -128,7 +145,6 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
     setPreviews(newPreviews);
     URL.revokeObjectURL(previews[index]);
   };
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,13 +152,12 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
     setError("");
   
     try {
-      const formDataToSend = new FormData();
+      // Prepare product data without images
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: Number(formData.price),
         manufacturer: formData.manufacturer.trim(),
-        category: selectedCategory?.name || "",
         categoryId: selectedCategory?.id,
         compatibility: formData.compatibility.trim(),
         dimensions: formData.dimensions.trim(),
@@ -152,60 +167,106 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
         condition: formData.condition || "new",
       };
   
-      formDataToSend.append("productData", JSON.stringify(productData));
-      images.forEach((image) => {
-        formDataToSend.append("images", image);
-      });
+      console.log('Sending Product Data:', productData); // Detailed logging
   
-      const url = mode === 'create' 
-        ? "http://localhost:3000/api/products"
-        : `http://localhost:3000/api/products/${product?.id}`;
+      const response = await fetch(
+        `http://localhost:3000/api/products/${product?.id}`, 
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(productData)
+        }
+      );
+  
+      console.log('Response Status:', response.status);
       
-      const method = mode === 'create' ? 'POST' : 'PUT';
-  
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formDataToSend,
-      });
+      const responseData = await response.json();
+      console.log('Response Data:', responseData);
   
       if (!response.ok) {
-        throw new Error(mode === 'create' ? "Failed to create product" : "Failed to update product");
+        throw new Error(responseData.message || "Failed to update product");
+      }
+  
+      // Separate image upload if needed
+      if (images.length > 0) {
+        const imageFormData = new FormData();
+        images.forEach((image) => {
+          imageFormData.append("images", image);
+        });
+  
+        const imageUploadResponse = await fetch(
+          `http://localhost:3000/api/products/${product?.id}/images`, 
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: imageFormData
+          }
+        );
+  
+        if (!imageUploadResponse.ok) {
+          const errorData = await imageUploadResponse.json();
+          throw new Error(errorData.message || "Failed to upload images");
+        }
       }
   
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error(mode === 'create' ? "Error creating product:" : "Error updating product:", error);
+      console.error('Complete Update Error:', error);
       setError(
-        error instanceof Error ? error.message : `Failed to ${mode} product`
+        error instanceof Error ? error.message : `Failed to update product`
       );
     } finally {
       setIsLoading(false);
     }
-    
   };
 
   useEffect(() => {
-    if (product?.images) {
-      setPreviews(product.images.map(img => getImageUrl(img)));
+    // Reset images when product changes
+    setImages([]);
+    setPreviews([]);
+
+    // Always set initial state, even if product is undefined
+    const initialImages = product?.images ?? [];
+    if (initialImages.length > 0) {
+      // Use unique image URLs to prevent duplicate keys
+      const uniqueImageUrls = [...new Set(initialImages.map(getImageUrl))];
+      setPreviews(uniqueImageUrls);
+
+      // Fetch image files
+      const fetchImages = async () => {
+        try {
+          const imageFiles = await Promise.all(
+            uniqueImageUrls.map(async (imageUrl) => {
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              return new File([blob], imageUrl.split("/").pop() || "image", {
+                type: blob.type,
+              });
+            })
+          );
+          setImages(imageFiles);
+        } catch (error) {
+          console.error("Error fetching images:", error);
+        }
+      };
+
+      fetchImages();
     }
   }, [product]);
 
+  // useEffect(() => {
+  //   if (product?.images) {
+  //     setPreviews(product.images.map((img) => getImageUrl(img)));
+  //   }
+  // }, [product]);
+
   if (!isOpen) return null;
-
-  const getImageUrl = (imageName: string) => {
-    if (imageName.startsWith("data:image")) {
-      return imageName;
-    }
-    if (imageName.startsWith("http://") || imageName.startsWith("https://")) {
-      return imageName;
-    }
-    return imageName.startsWith("/") ? imageName : `/uploads/${imageName}`;
-  };
-
   
 
   return (
@@ -228,7 +289,10 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
         <form
           onSubmit={handleSubmit}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+            if (
+              e.key === "Enter" &&
+              (e.target as HTMLElement).tagName !== "TEXTAREA"
+            ) {
               e.preventDefault();
             }
           }}
@@ -466,16 +530,18 @@ const SellPartModal = ({ isOpen, onClose, onSuccess, product, mode = 'create' }:
               Cancel
             </button>
             <button
-  type="submit"
-  disabled={isLoading}
-  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
->
-  {isLoading ? (
-    <Loader2 className="h-5 w-5 animate-spin" />
-  ) : (
-    (mode === 'create' ? "Create Part" : "Update Part")
-  )}
-</button>
+              type="submit"
+              disabled={isLoading}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : mode === "create" ? (
+                "Create Part"
+              ) : (
+                "Update Part"
+              )}
+            </button>
           </div>
         </form>
       </div>

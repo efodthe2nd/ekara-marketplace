@@ -18,6 +18,8 @@ import {
 interface ProductModalProps {
   product: Product;
   onClose: () => void;
+  onUpdate: (newProduct: Product) => void;
+
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
@@ -166,7 +168,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
             <div className="flex items-center justify-between mb-6">
               <span className="text-3xl font-bold text-gray-900">
-                ${parseFloat(product.price).toFixed(2)}
+                ${parseFloat(product.price.toString()).toFixed(2)}
               </span>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
