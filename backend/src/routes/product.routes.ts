@@ -45,17 +45,26 @@ export const productRouter = (productController: ProductController): Router => {
         productController.createProduct as RequestHandler
     );
 
+
+
     router.put('/:id',
         authMiddleware,
-        requireRole('seller'),
+        //requireRole('seller'),
         productController.updateProduct as RequestHandler
     );
-
+    
     router.delete('/:id',
         authMiddleware,
         requireRole('seller'),
         productController.deleteProduct as RequestHandler
     );
     
+    router.post('/:id/images', 
+        authMiddleware,
+        requireRole('seller'),
+        upload.array('images', 5), // Allow up to 5 images
+        productController.uploadProductImages as RequestHandler
+      );
+
     return router;
 };
