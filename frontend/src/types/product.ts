@@ -25,7 +25,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;  // Keeping as string to match backend
+  price: number;
   manufacturer: string;
   images: string[];
   category: string;
@@ -33,7 +33,7 @@ export interface Product {
   categoryRelation?: Category;
   compatibility: string;
   dimensions: string;
-  weight: string;
+  weight: number;
   warranty: string;
   stock: number;
   createdAt: string;

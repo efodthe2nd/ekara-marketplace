@@ -8,7 +8,7 @@ import { Product } from "@/types/product";
 interface SellPartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (updatedProduct: Product) => void;
   product?: Product;
   mode?: "create" | "edit";
 }
@@ -21,6 +21,7 @@ const MAX_FILES = 5;
 const SellPartModal = ({
   isOpen,
   onClose,
+
   onSuccess,
   product,
   mode = "create",
@@ -28,14 +29,14 @@ const SellPartModal = ({
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
-    price: product?.price?.toString() || "",
+    price: product?.price || "",
     manufacturer: product?.manufacturer || "",
     category: product?.categoryRelation?.name || "",
     compatibility: product?.compatibility || "",
     dimensions: product?.dimensions || "",
-    weight: product?.weight?.toString() || "",
+    weight: product?.weight || "",
     warranty: product?.warranty || "",
-    stock: product?.stock?.toString() || "",
+    stock: product?.stock || "",
     condition: product?.condition || "new",
   });
 
@@ -152,7 +153,6 @@ const SellPartModal = ({
     setError("");
   
     try {
-      // Prepare product data without images
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -167,98 +167,127 @@ const SellPartModal = ({
         condition: formData.condition || "new",
       };
   
-      console.log('Sending Product Data:', productData); // Detailed logging
+      if (mode === "create") {
+        // For create, send everything in one FormData object
+        const formDataToSend = new FormData();
+        // Make sure to append productData as a string
+        formDataToSend.append('productData', JSON.stringify(productData));
+        
+        // Append images with the correct field name
+        if (images.length > 0) {
+          images.forEach((image) => {
+            formDataToSend.append('images', image); // Make sure this matches your Multer config
+          });
+        }
   
-      const response = await fetch(
-        `http://localhost:3000/api/products/${product?.id}`, 
-        {
-          method: 'PUT',
+        const response = await fetch("http://localhost:3000/api/products", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify(productData)
-        }
-      );
-  
-      console.log('Response Status:', response.status);
-      
-      const responseData = await response.json();
-      console.log('Response Data:', responseData);
-  
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to update product");
-      }
-  
-      // Separate image upload if needed
-      if (images.length > 0) {
-        const imageFormData = new FormData();
-        images.forEach((image) => {
-          imageFormData.append("images", image);
+          body: formDataToSend
         });
   
-        const imageUploadResponse = await fetch(
-          `http://localhost:3000/api/products/${product?.id}/images`, 
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create product");
+        }
+  
+        const createdProduct = await response.json();
+        onSuccess?.(createdProduct);
+        onClose();
+  
+      } else {
+        // Update logic remains the same
+        const response = await fetch(
+          `http://localhost:3000/api/products/${product?.id}`,
           {
-            method: 'POST',
+            method: 'PUT',
             headers: {
+              'Content-Type': 'application/json',
               'Authorization': `Bearer ${localStorage.getItem("token")}`,
             },
-            body: imageFormData
+            body: JSON.stringify(productData)
           }
         );
   
-        if (!imageUploadResponse.ok) {
-          const errorData = await imageUploadResponse.json();
-          throw new Error(errorData.message || "Failed to upload images");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to update product");
         }
-      }
   
-      onSuccess?.();
-      onClose();
+        const updatedProduct = await response.json();
+  
+        // Handle image upload for update if there are new images
+        if (images.length > 0) {
+          const imageFormData = new FormData();
+          images.forEach((image) => {
+            imageFormData.append('images', image);
+          });
+  
+          const imageUploadResponse = await fetch(
+            `http://localhost:3000/api/products/${product?.id}/images`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: imageFormData
+            }
+          );
+  
+          if (!imageUploadResponse.ok) {
+            const errorData = await imageUploadResponse.json();
+            throw new Error(errorData.message || "Failed to upload images");
+          }
+        }
+  
+        onSuccess?.(updatedProduct);
+        onClose();
+      }
     } catch (error) {
-      console.error('Complete Update Error:', error);
+      console.error(`Complete ${mode} Error:`, error);
       setError(
-        error instanceof Error ? error.message : `Failed to update product`
+        error instanceof Error ? error.message : `Failed to ${mode} product`
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    // Reset images when product changes
-    setImages([]);
-    setPreviews([]);
+  // useEffect(() => {
+  //   // Reset images when product changes
+  //   setImages([]);
+  //   setPreviews([]);
 
     // Always set initial state, even if product is undefined
-    const initialImages = product?.images ?? [];
-    if (initialImages.length > 0) {
-      // Use unique image URLs to prevent duplicate keys
-      const uniqueImageUrls = [...new Set(initialImages.map(getImageUrl))];
-      setPreviews(uniqueImageUrls);
+    // const initialImages = product?.images ?? [];
+    // if (initialImages.length > 0) {
+    //   // Use unique image URLs to prevent duplicate keys
+    //   const uniqueImageUrls = [...new Set(initialImages.map(getImageUrl))];
+    //   setPreviews(uniqueImageUrls);
 
       // Fetch image files
-      const fetchImages = async () => {
-        try {
-          const imageFiles = await Promise.all(
-            uniqueImageUrls.map(async (imageUrl) => {
-              const response = await fetch(imageUrl);
-              const blob = await response.blob();
-              return new File([blob], imageUrl.split("/").pop() || "image", {
-                type: blob.type,
-              });
-            })
-          );
-          setImages(imageFiles);
-        } catch (error) {
-          console.error("Error fetching images:", error);
-        }
-      };
+  //     const fetchImages = async () => {
+  //       try {
+  //         const imageFiles = await Promise.all(
+  //           uniqueImageUrls.map(async (imageUrl) => {
+  //             const response = await fetch(imageUrl);
+  //             const blob = await response.blob();
+  //             return new File([blob], imageUrl.split("/").pop() || "image", {
+  //               type: blob.type,
+  //             });
+  //           })
+  //         );
+  //         setImages(imageFiles);
+  //       } catch (error) {
+  //         console.error("Error fetching images:", error);
+  //       }
+  //     };
 
-      fetchImages();
-    }
-  }, [product]);
+  //     fetchImages();
+  //   }
+  // }, [product]);
 
   // useEffect(() => {
   //   if (product?.images) {

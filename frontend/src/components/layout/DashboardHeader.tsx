@@ -251,6 +251,7 @@ export function DashboardHeader({
           onProductCreated?.();
           router.refresh();
         }}
+        mode='create'
       />
     </nav>
 

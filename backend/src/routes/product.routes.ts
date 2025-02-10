@@ -56,6 +56,13 @@ export const productRouter = (productController: ProductController): Router => {
         requireRole('seller'),
         productController.deleteProduct as RequestHandler
     );
+
+    router.post('/:id/images',
+        authMiddleware,
+        requireRole('seller'),
+        upload.array('images'), // Multer middleware
+        productController.uploadProductImages as RequestHandler
+    );
     
     return router;
 };

@@ -18,8 +18,6 @@ import {
 interface ProductModalProps {
   product: Product;
   onClose: () => void;
-  onUpdate: (newProduct: Product) => void;
-
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
