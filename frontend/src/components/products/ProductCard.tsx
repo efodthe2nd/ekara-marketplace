@@ -48,6 +48,7 @@ export function ProductCard({ product: initialProduct }: { product: Product }) {
             alt={product.name}
             fill
             style={{ objectFit: "cover" }}
+            loading="lazy"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="rounded-t-xl"
             quality={75}

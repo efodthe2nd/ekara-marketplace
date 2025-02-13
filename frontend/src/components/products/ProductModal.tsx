@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Product } from "@/types/product";
@@ -24,9 +24,18 @@ interface ProductModalProps {
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProductUpdate }) => {
   const { user } = useAuth();
   const router = useRouter();
-  const isProductOwner = user?.id === product.seller?.user?.id;
+  const isProductOwner = useMemo(() => 
+    user?.id === (product.seller?.user?.id ?? product.seller),[user, product.seller]
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  console.log('Modal Render:', {
+    userId: user?.id,
+    sellerId: product.seller?.user?.id,
+    isProductOwner,
+    product
+  });
 
   const getImageUrl = (imageName: string) => {
     if (imageName.startsWith("data:image")) {
