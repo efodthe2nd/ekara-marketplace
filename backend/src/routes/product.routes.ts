@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ProductController } from '../controllers/ProductController';
 import { authMiddleware, requireRole } from '../middleware/auth.middleware';
 import { RequestHandler } from 'express';
-import { upload } from '../middleware/upload.middleware';
+import { upload, uploadToVercelBlob } from '../middleware/upload.middleware';
 
 export const productRouter = (productController: ProductController): Router => {
     const router = Router();
@@ -42,6 +42,7 @@ export const productRouter = (productController: ProductController): Router => {
         authMiddleware,
         requireRole('seller'), 
         upload.array('images', 5),
+        uploadToVercelBlob,
         productController.createProduct as RequestHandler
     );
 
@@ -61,8 +62,16 @@ export const productRouter = (productController: ProductController): Router => {
         authMiddleware,
         requireRole('seller'),
         upload.array('images'), // Multer middleware
+        uploadToVercelBlob,
         productController.uploadProductImages as RequestHandler
     );
+
+    router.delete(
+        '/:id/images/:imageIndex',
+        authMiddleware,
+        requireRole('seller'),
+        productController.deleteProductImage as RequestHandler
+      );
     
     return router;
 };

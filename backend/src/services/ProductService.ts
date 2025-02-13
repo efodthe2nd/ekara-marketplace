@@ -257,8 +257,11 @@ export class ProductService {
       throw new Error("Product not found");
     }
 
-    // Merge new images with existing ones
-    product.images = [...(product.images || []), ...imageUrls];
+    // Add only new images instead of concatenating
+    const existingImages = product.images || [];
+    const uniqueNewImages = imageUrls.filter(url => !existingImages.includes(url));
+    product.images = [...existingImages, ...uniqueNewImages];
+
     return this.productRepository.save(product);
   }
 
@@ -335,6 +338,26 @@ export class ProductService {
         throw new Error('Failed to fetch products by manufacturer: ' + String(error));
       }
     }
+  }
+
+  public async removeProductImage(
+    productId: number,
+    imagePath: string
+  ): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId }
+    });
+  
+    if (!product) {
+      throw new Error('Product not found');
+    }
+  
+    // Remove the image path from the images array
+    const updatedImages = product.images.filter(img => img !== imagePath);
+  
+    // Update the product with the new images array
+    product.images = updatedImages;
+    return this.productRepository.save(product);
   }
 
   

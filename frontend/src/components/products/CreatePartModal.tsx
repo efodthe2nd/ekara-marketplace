@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
 import { Product } from "@/types/product";
+import Image from "next/image";
+
 
 interface SellPartModalProps {
   isOpen: boolean;
@@ -11,6 +13,12 @@ interface SellPartModalProps {
   onSuccess?: (updatedProduct: Product) => void;
   product?: Product;
   mode?: "create" | "edit";
+}
+
+interface ImageState {
+  existingImages: string[];  // URLs of images already on the server
+  newImages: File[];         // New image files to upload
+  previews: string[];       // Combined preview URLs
 }
 
 // Image validation constants
@@ -40,6 +48,12 @@ const SellPartModal = ({
     condition: product?.condition || "new",
   });
 
+  const [imageState, setImageState] = useState<ImageState>({
+    existingImages: [],
+    newImages: [],
+    previews: []
+  });
+
   // Initialize selected category if editing
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     product?.categoryRelation
@@ -52,8 +66,6 @@ const SellPartModal = ({
   );
 
   // Image handling states
-  const [images, setImages] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   const [uploadProgress] = useState(0);
   const [imageError, setImageError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -80,46 +92,36 @@ const SellPartModal = ({
     return imageName.startsWith("/") ? imageName : `/uploads/${imageName}`;
   };
 
+  // Initialize image state when product changes
   useEffect(() => {
-    // Always set initial state, even if product is undefined
-    const initialImages = product?.images ?? [];
-    if (initialImages.length > 0) {
-      const imageUrls = initialImages.map((img) => getImageUrl(img));
-      setPreviews(imageUrls);
-
-      // Fetch image files
-      const fetchImages = async () => {
-        try {
-          const imageFiles = await Promise.all(
-            initialImages.map(async (img) => {
-              const response = await fetch(getImageUrl(img));
-              const blob = await response.blob();
-              return new File([blob], img.split("/").pop() || "image", {
-                type: blob.type,
-              });
-            })
-          );
-          setImages(imageFiles);
-        } catch (error) {
-          console.error("Error fetching images:", error);
-        }
-      };
-
-      fetchImages();
+    if (product?.images) {
+      setImageState({
+        existingImages: product.images,
+        newImages: [],
+        previews: product.images.map(img => getImageUrl(img))
+      });
+    } else {
+      setImageState({
+        existingImages: [],
+        newImages: [],
+        previews: []
+      });
     }
   }, [product]);
+
+  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImageError("");
 
-    if (files.length > MAX_FILES) {
+    if (files.length + imageState.existingImages.length > MAX_FILES) {
       setImageError(`Maximum ${MAX_FILES} images allowed`);
       return;
     }
 
     const validFiles: File[] = [];
-    const validPreviews: string[] = [];
+    const newPreviews: string[] = [];
 
     files.forEach((file) => {
       const error = validateImage(file);
@@ -129,23 +131,74 @@ const SellPartModal = ({
       }
 
       validFiles.push(file);
-      validPreviews.push(URL.createObjectURL(file));
+      newPreviews.push(URL.createObjectURL(file));
     });
 
     if (validFiles.length > 0) {
-      setImages(validFiles);
-      setPreviews(validPreviews);
+      setImageState(prev => ({
+        ...prev,
+        newImages: [...prev.newImages, ...validFiles],
+        previews: [...prev.previews, ...newPreviews]
+      }));
     }
   };
 
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    const newPreviews = previews.filter((_, i) => i !== index);
-
-    setImages(newImages);
-    setPreviews(newPreviews);
-    URL.revokeObjectURL(previews[index]);
+  const removeImage = async (index: number) => {
+    try {
+      const totalExisting = imageState.existingImages.length;
+      
+      if (index < totalExisting) {
+        // It's an existing image - need to delete from server first
+        const imageToDelete = imageState.existingImages[index];
+        console.log('Attempting to delete image:', imageToDelete);
+      console.log('Full URL:', `http://localhost:3000/api/products/${product?.id}/images/${encodeURIComponent(imageToDelete)}`);
+        
+        const response = await fetch(
+          `http://localhost:3000/api/products/${product?.id}/images/${encodeURIComponent(imageToDelete)}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            }
+          }
+        );
+  
+        if (!response.ok) {
+          throw new Error('Failed to delete image from server');
+        }
+  
+        // Only update local state if server delete was successful
+        setImageState(prev => {
+          const newState = { ...prev };
+          newState.existingImages = prev.existingImages.filter((_, i) => i !== index);
+          newState.previews = [
+            ...newState.existingImages.map(img => getImageUrl(img)),
+            ...newState.newImages.map(file => URL.createObjectURL(file))
+          ];
+          return newState;
+        });
+      } else {
+        // It's a new image that hasn't been uploaded yet
+        setImageState(prev => {
+          const newState = { ...prev };
+          const newIndex = index - totalExisting;
+          URL.revokeObjectURL(prev.previews[index]); // Clean up preview URL
+          newState.newImages = prev.newImages.filter((_, i) => i !== newIndex);
+          newState.previews = [
+            ...newState.existingImages.map(img => getImageUrl(img)),
+            ...newState.newImages.map(file => URL.createObjectURL(file))
+          ];
+          return newState;
+        });
+      }
+    } catch (error) {
+      console.error('Error removing image:', error);
+      // Show error to user
+      setError('Failed to delete image. Please try again.');
+    }
   };
+
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,18 +218,17 @@ const SellPartModal = ({
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
         condition: formData.condition || "new",
+        //images: imageState.existingImages // Include existing images in product data
       };
   
       if (mode === "create") {
-        // For create, send everything in one FormData object
+        // Create logic
         const formDataToSend = new FormData();
-        // Make sure to append productData as a string
         formDataToSend.append('productData', JSON.stringify(productData));
         
-        // Append images with the correct field name
-        if (images.length > 0) {
-          images.forEach((image) => {
-            formDataToSend.append('images', image); // Make sure this matches your Multer config
+        if (imageState.newImages.length > 0) {
+          imageState.newImages.forEach((image) => {
+            formDataToSend.append('images', image);
           });
         }
   
@@ -189,18 +241,21 @@ const SellPartModal = ({
         });
   
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create product");
+          throw new Error("Failed to create product");
         }
   
         const createdProduct = await response.json();
         onSuccess?.(createdProduct);
         onClose();
-  
       } else {
-        // Update logic remains the same
-        const response = await fetch(
-          `http://localhost:3000/api/products/${product?.id}`,
+        // Update logic
+        if (!product?.id) {
+          throw new Error("Product ID is required for updates");
+        }
+  
+        // First update the product data
+        const updateResponse = await fetch(
+          `http://localhost:3000/api/products/${product.id}`,
           {
             method: 'PUT',
             headers: {
@@ -211,22 +266,21 @@ const SellPartModal = ({
           }
         );
   
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to update product");
+        if (!updateResponse.ok) {
+          throw new Error(`Failed to update product: ${updateResponse.status}`);
         }
   
-        const updatedProduct = await response.json();
+        let updatedProduct = await updateResponse.json();
   
-        // Handle image upload for update if there are new images
-        if (images.length > 0) {
+        // Only upload new images if there are any
+        if (imageState.newImages.length > 0) {
           const imageFormData = new FormData();
-          images.forEach((image) => {
+          imageState.newImages.forEach((image) => {
             imageFormData.append('images', image);
           });
   
           const imageUploadResponse = await fetch(
-            `http://localhost:3000/api/products/${product?.id}/images`,
+            `http://localhost:3000/api/products/${product.id}/images`,
             {
               method: 'POST',
               headers: {
@@ -237,9 +291,10 @@ const SellPartModal = ({
           );
   
           if (!imageUploadResponse.ok) {
-            const errorData = await imageUploadResponse.json();
-            throw new Error(errorData.message || "Failed to upload images");
+            throw new Error("Failed to upload images");
           }
+  
+          updatedProduct = await imageUploadResponse.json();
         }
   
         onSuccess?.(updatedProduct);
@@ -480,7 +535,7 @@ const SellPartModal = ({
             {/* Image Upload Section */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700">
-                Product Images ({images.length}/{MAX_FILES})
+                Product Images ({imageState.previews.length}/{MAX_FILES})
               </label>
 
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
@@ -513,27 +568,35 @@ const SellPartModal = ({
                 <p className="mt-2 text-sm text-red-600">{imageError}</p>
               )}
 
-              {previews.length > 0 && (
-                <div className="mt-4 grid grid-cols-4 gap-4">
-                  {previews.map((preview, index) => (
-                    <div key={preview} className="relative">
-                      <img
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="h-24 w-24 object-cover rounded"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
+{imageState.previews.map((preview, index) => (
+  <div key={`${preview}-${index}`} className="relative inline-block">
+    {preview.startsWith('data:') ? (
+      // For local previews (not yet uploaded)
+      <img 
+        src={preview} 
+        alt={`Preview ${index + 1}`} 
+        className="h-24 w-24 object-cover rounded"
+      />
+    ) : (
+      // For uploaded images (Vercel Blob URLs)
+      <Image 
+        src={preview} 
+        alt={`Preview ${index + 1}`} 
+        width={96}
+        height={96}
+        loading="lazy"
+        className="object-cover rounded"
+      />
+    )}
+    <button
+      type="button"
+      onClick={() => removeImage(index)}
+      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-sm"
+    >
+      <X className="h-3 w-3" />
+    </button>
+  </div>
+))}
               {uploadProgress > 0 && uploadProgress < 100 && (
                 <div className="mt-2">
                   <div className="bg-gray-200 rounded-full h-2.5">

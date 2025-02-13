@@ -1,6 +1,8 @@
 import { Router, Request, Response, RequestHandler } from "express";
 // import * as fs from "fs";
-// import * as path from "path";
+import * as path from "path";
+import { put } from "@vercel/blob";
+import { promises as fs } from "fs";
 // import { promisify } from 'util';
 import { ProductService } from "../services/ProductService";
 import { CreateProductDto } from "../dto/user/CreateProductDto";
@@ -20,37 +22,27 @@ export class ProductController {
 
   createProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log("Received files:", req.files); // Debug line
-      console.log("Received body:", req.body); // Debug line
-
-      const files = req.files as Express.Multer.File[];
+      console.log("Received files:", req.files);
+      console.log("Received body:", req.body);
+  
       const productData = JSON.parse(req.body.productData);
-
-      // Convert files to Base64
-      const imageBase64s =
-        files?.map(
-          (file) =>
-            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
-        ) || [];
-
-      console.log("Number of images converted:", imageBase64s.length); // Debug line
-
       const sellerId = (req as AuthRequest).user!.id;
-
+  
+      // Use the URLs from Vercel Blob instead of base64
+      const imageUrls = req.body.imageUrls || [];
+  
       // Combine all data into a single object
       const productToCreate = {
         ...productData,
-        images: imageBase64s, // This contains the base64 strings
+        images: imageUrls, // This now contains the Vercel Blob URLs
         sellerId,
       };
-
-      console.log("Creating product with images:", imageBase64s.length > 0); // Debug line
-
+  
       const product = await this.productService.createProduct(
         productToCreate,
         sellerId
       );
-
+  
       res.status(201).json(product);
     } catch (error: any) {
       console.error("Error creating product:", error);
@@ -131,33 +123,34 @@ export class ProductController {
     }
   };
 
-  public uploadProductImages = async (
-    req: Request,
-    res: Response
-  ): Promise<void> => {
+  public uploadProductImages = async (req: Request, res: Response): Promise<void> => {
     try {
       const productId = Number(req.params.id);
       const files = req.files as Express.Multer.File[];
-
+  
       if (!files || files.length === 0) {
         res.status(400).json({ message: "No files uploaded" });
         return;
       }
-
-      const imageUrls = files.map(
-        (file) => `/uploads/products/${file.filename}`
+  
+      // Upload images to Vercel Blob and get URLs
+      const imageUrls = await Promise.all(
+        files.map(async (file) => {
+          const blob = await put(file.originalname, file.buffer, {
+            access: "public",
+            token: process.env.BLOB_READ_WRITE_TOKEN, // Ensure you have this in your .env file
+          });
+          return blob.url; // Return the uploaded image URL
+        })
       );
-      const updatedProduct = await this.productService.updateProductImages(
-        productId,
-        imageUrls
-      );
-
+  
+      // Update the product images in the database
+      const updatedProduct = await this.productService.updateProductImages(productId, imageUrls);
+  
       res.json(updatedProduct);
     } catch (error: any) {
       console.error("Image upload error:", error);
-      res
-        .status(500)
-        .json({ message: error?.message || "Image upload failed" });
+      res.status(500).json({ message: error?.message || "Image upload failed" });
     }
   };
 
@@ -248,4 +241,32 @@ export class ProductController {
       res.status(500).json({ error: 'Failed to fetch products' });
     }
 }
+
+public deleteProductImage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const productId = Number(req.params.id);
+    const imagePath = req.params.imagePath;
+
+    // Delete the image from storage
+    const fullPath = path.join(__dirname, '../../', imagePath);
+    await fs.unlink(fullPath);
+
+    // Remove the image from the product's images array in database
+    const updatedProduct = await this.productService.removeProductImage(
+      productId,
+      imagePath
+    );
+
+    res.json(updatedProduct);
+  } catch (error: any) {
+    console.error("Delete image error:", error);
+    res
+      .status(500)
+      .json({ message: error?.message || "Failed to delete image" });
+  }
+};
+
 }

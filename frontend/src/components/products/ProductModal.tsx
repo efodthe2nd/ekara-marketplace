@@ -18,9 +18,10 @@ import {
 interface ProductModalProps {
   product: Product;
   onClose: () => void;
+  onProductUpdate?: (updatedProduct: Product) => void;
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
+const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProductUpdate }) => {
   const { user } = useAuth();
   const router = useRouter();
   const isProductOwner = user?.id === product.seller?.user?.id;
@@ -68,6 +69,13 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     } else {
       router.push(`/order/${product.id}`);
     }
+  };
+
+  const handleProductUpdateSuccess = (updatedProduct: Product) => {
+    // Call the passed update callback if it exists
+    onProductUpdate?.(updatedProduct);
+    setShowEditModal(false);
+    onClose();
   };
 
   return (
@@ -276,15 +284,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
         <SellPartModal
           isOpen={true}
           onClose={() => setShowEditModal(false)}
-          onSuccess={() => {
-            setShowEditModal(false);
-            // You might want to refresh the product data here
-            onClose();
-          }}
+          onSuccess={handleProductUpdateSuccess}
           product={product}
           mode="edit"
         />
       )}
+      
     </div>
   );
 };

@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:vercel": "ts-node tests/vercel-upload.test.ts",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
@@ -26,6 +27,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "@types/node-cron": "^3.0.11",
+    "@vercel/blob": "^0.27.1",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

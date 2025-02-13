@@ -20,6 +20,16 @@ interface Category {
   updatedAt: string;
 }
 
+export interface BlobResponse {
+  url: string;
+  pathname: string;
+}
+
+export interface ProductImage {
+  url: string;
+  pathname?: string;
+}
+
 
 export interface Product {
   id: string;

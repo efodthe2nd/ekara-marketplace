@@ -1,6 +1,16 @@
 // src/middleware/upload.middleware.ts
 import multer, { FileFilterCallback } from 'multer';
+import { Request, Response, NextFunction } from 'express';
+import { put } from "@vercel/blob";
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+
+interface MulterFileWithUrl extends Express.Multer.File {
+  url?: string;
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -28,44 +38,54 @@ export const uploadProfilePicture = multer({
   }
 }).single('profilePicture');
 
-export const upload = multer({
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 5
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 5, // Max 5 files per upload
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type'));
+      cb(new Error("Invalid file type"));
     }
-  }
+  },
 });
 
-// const productStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads/products/');
-//   },
-//   filename: (req, file, cb) => {
-//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-//     cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
-//   }
-// });
+export const uploadToVercelBlob = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  if (!req.files || !Array.isArray(req.files)) {
+    next(); // Continue without uploading if no files
+    return;
+  }
 
-// export const uploadProductImages = multer({
-//   storage: memoryStorage(),
-//   limits: {
-//     fileSize: 5 * 1024 * 1024,
-//     files: 5
-//   },
-//   fileFilter: (req, file, cb) => {
-//     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-//     if (allowedTypes.includes(file.mimetype)) {
-//       cb(null, true);
-//     } else {
-//       cb(new Error('Invalid file type. Only JPEG, PNG and WebP allowed.'));
-//     }
-//   }
-// });
+  try {
+    console.log("BLOB_READ_WRITE_TOKEN:", process.env.BLOB_READ_WRITE_TOKEN);
+    
+    const uploadedFiles = await Promise.all(
+      req.files.map(async (file: Express.Multer.File) => {
+        // Generate a unique filename
+        const uniqueFilename = `${Date.now()}-${file.originalname}`;
+        const blob = await put(uniqueFilename, file.buffer, {
+          access: 'public',
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+          addRandomSuffix: true, // Adds a random suffix to prevent naming conflicts
+        });
+        return blob.url;
+      })
+    );
+
+    req.body.imageUrls = uploadedFiles;
+    next();
+  } catch (error) {
+    console.error("Vercel Blob upload error:", error);
+    res.status(500).json({ error: "Failed to upload images" });
+  }
+};
+
+export { upload };
