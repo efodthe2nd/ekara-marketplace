@@ -1,4 +1,3 @@
-// src/app/settings/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,6 +11,7 @@ import {
   LogOut,
   ChevronRight,
   Store,
+  ArrowLeft,
 } from "lucide-react";
 
 
@@ -41,6 +41,10 @@ const SettingsPage = () => {
       hidden: isSeller // Hide if user is already a seller
     },
   ];
+
+  const handleGoBack = () => {
+    router.back();
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -361,6 +365,15 @@ const SettingsPage = () => {
       {/* <DashboardHeader searchTerm="" setSearchTerm={() => {}} /> */}
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Back Button */}
+          <button 
+            onClick={handleGoBack}
+            className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            <span>Back</span>
+          </button>
+          
           <div className="flex gap-8">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0">
