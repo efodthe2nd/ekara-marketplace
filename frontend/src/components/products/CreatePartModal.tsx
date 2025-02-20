@@ -588,16 +588,12 @@ const SellPartModal = ({
                       <Image
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        width={96} // Keep this small - actual display size
+                        width={96}
                         height={96}
-                        quality={60} // Lower quality for previews
-                        sizes="96px" // Tell Next.js exactly what size we need
-                        loading="eager"
+                        quality={60}
+                        placeholder="blur"
+                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                         className="object-cover rounded"
-                        onError={(e) => {
-                          console.log("Preview failed to load:", preview);
-                          e.currentTarget.src = "/placeholder-image.jpg";
-                        }}
                       />
                     </div>
                   )}

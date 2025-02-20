@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactCrop, { type Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -17,6 +17,7 @@ import {
   Edit,
   Check,
   ChevronDown,
+  ArrowLeft,
 } from "lucide-react";
 import StarRating from "@/components/ui/StarRating";
 import ReviewForm from "@/components/ui/ReviewForm/ReviewForm";
@@ -56,7 +57,7 @@ interface Product {
 
 const ProfilePage = () => {
   const { user, updateUserProfile } = useAuth();
-  //const router = useRouter();
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const viewedProfileId: string | string[] | null = params?.id || searchParams.get("id") || user?.id?.toString() || null;
@@ -158,6 +159,10 @@ const ProfilePage = () => {
       console.error("Error fetching seller profile and stats:", err);
     }
   }, []);
+
+  const handleGoBack = () => {
+    router.back();
+  };
 
   useEffect(() => {
     const profileId = getProfileId(viewedProfileId as string | string[] | null);
@@ -540,6 +545,14 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button 
+            onClick={handleGoBack}
+            className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            <span>Back</span>
+          </button>
         {/* Profile Header */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
           <div className="p-8">
