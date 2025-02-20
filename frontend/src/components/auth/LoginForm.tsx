@@ -14,21 +14,30 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
-      await login(email, password);
-      await new Promise(resolve => setTimeout(resolve, 0));
-      onSuccess?.();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Login will now immediately update the user state in context
+      const userData = await login(email, password);
+      console.log(userData);
+      // No need for setTimeout - the state is already updated
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      // Navigate to dashboard
       router.push('/dashboard');
     } catch {
       setError('Invalid credentials');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -45,6 +54,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 sm:text-sm h-8 pl-4"
           required
+          disabled={isLoading}
         />
       </div>
 
@@ -59,6 +69,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 sm:text-sm h-8 pl-4 pr-10"
           required
+          disabled={isLoading}
         />
         <button
           type="button"
@@ -108,9 +119,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md ${
+          isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
+        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+        disabled={isLoading}
       >
-        Sign in
+        {isLoading ? 'Signing in...' : 'Sign in'}
       </button>
 
       {/* Register link */}
