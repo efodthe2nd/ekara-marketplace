@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Product } from "@/types/product";
@@ -28,19 +28,25 @@ const ProductModal: React.FC<ProductModalProps> = ({
 }) => {
   const { user } = useAuth();
   const router = useRouter();
-  const isProductOwner = useMemo(
-    () => user?.id === product.seller?.user?.id,
-    [user?.id, product.seller?.user?.id]
-  );
+  const [isProductOwner, setIsProductOwner] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  console.log("Modal Render:", {
-    userId: user?.id,
-    sellerId: product.seller?.user?.id,
-    isProductOwner,
-    product,
-  });
+  // Replace useMemo with useEffect to properly update ownership status
+  useEffect(() => {
+    // Check if the user is the owner of the product
+    const isOwner = user?.id === product.seller?.user?.id;
+    
+    // For debugging
+    console.log("Ownership check:", {
+      userId: user?.id,
+      sellerId: product.seller?.user?.id,
+      isOwner,
+      product,
+    });
+    
+    setIsProductOwner(isOwner);
+  }, [user?.id, product, product.seller]);
 
   const getImageUrl = (imageName: string) => {
     if (imageName.startsWith("data:image")) {
@@ -86,8 +92,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
   };
 
   const handleProductUpdateSuccess = (updatedProduct: Product) => {
+    // Make sure to preserve seller information when updating
+    const updatedProductWithSeller = {
+      ...updatedProduct,
+      seller: product.seller, // Keep the original seller information
+    };
+    
     // Call the passed update callback if it exists
-    onProductUpdate?.(updatedProduct);
+    onProductUpdate?.(updatedProductWithSeller);
     setShowEditModal(false);
     onClose();
   };
@@ -217,7 +229,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   className="font-medium text-gray-900 cursor-pointer hover:underline"
                   onClick={() =>
                     router.push(
-                      `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
+                      `/manufacturer?manufacturer=${product.manufacturer}`
                     )
                   }
                 >
@@ -257,7 +269,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   className="cursor-pointer hover:cyan-600 transition-colors hover:underline"
                   onClick={() =>
                     router.push(
-                      `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
+                      `/manufacturer?manufacturer=${product.manufacturer}`
                     )
                   }
                 >
