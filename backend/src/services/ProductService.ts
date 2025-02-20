@@ -252,18 +252,25 @@ export class ProductService {
       where: { id: productId },
       relations: ["seller"],
     });
-
+  
     if (!product) {
       throw new Error("Product not found");
     }
-
-    // Add only new images instead of concatenating
-    const existingImages = product.images || [];
-    const uniqueNewImages = imageUrls.filter(url => !existingImages.includes(url));
-    product.images = [...existingImages, ...uniqueNewImages];
-
+  
+    // Ensure images array is initialized
+    product.images = product.images ? [...product.images] : [];
+  
+    // Filter out duplicates
+    const newImages = imageUrls.filter(url => !product.images.includes(url));
+    if (newImages.length === 0) {
+      throw new Error("No new images to update");
+    }
+  
+    product.images = [...product.images, ...newImages];
+  
     return this.productRepository.save(product);
   }
+  
 
   async suggestProducts(query: string, limit: number = 5): Promise<Product[]> {
     return this.productRepository

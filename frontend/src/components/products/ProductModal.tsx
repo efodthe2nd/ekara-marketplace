@@ -21,20 +21,25 @@ interface ProductModalProps {
   onProductUpdate?: (updatedProduct: Product) => void;
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProductUpdate }) => {
+const ProductModal: React.FC<ProductModalProps> = ({
+  product,
+  onClose,
+  onProductUpdate,
+}) => {
   const { user } = useAuth();
   const router = useRouter();
-  const isProductOwner = useMemo(() => 
-    user?.id === (product.seller?.user?.id ?? product.seller),[user, product.seller]
+  const isProductOwner = useMemo(
+    () => user?.id === product.seller?.user?.id,
+    [user?.id, product.seller?.user?.id]
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  console.log('Modal Render:', {
+  console.log("Modal Render:", {
     userId: user?.id,
     sellerId: product.seller?.user?.id,
     isProductOwner,
-    product
+    product,
   });
 
   const getImageUrl = (imageName: string) => {
@@ -89,32 +94,27 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProduct
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center backdrop-blur-sm p-4">
-    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50"
-      >
-        <X className="h-6 w-6" />
-      </button>
-
-      {isProductOwner && (
-        <button
-          onClick={handleEditClick}
-          className="absolute top-4 right-14 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50 group"
-        >
-          <Pencil className="h-6 w-6" />
-          <span className="absolute hidden group-hover:block right-full mr-2 bg-gray-800 text-white text-sm px-2 py-1 rounded whitespace-nowrap">
-            Edit Product
-          </span>
-        </button>
-      )}
-
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        {/* Single close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50"
         >
           <X className="h-6 w-6" />
         </button>
+
+        {/* Edit button - make sure it's OUTSIDE any conditional rendering */}
+        {isProductOwner && (
+          <button
+            onClick={handleEditClick}
+            className="absolute top-4 right-14 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors z-50 group"
+          >
+            <Pencil className="h-6 w-6" />
+            <span className="absolute hidden group-hover:block right-full mr-2 bg-gray-800 text-white text-sm px-2 py-1 rounded whitespace-nowrap">
+              Edit Product
+            </span>
+          </button>
+        )}
 
         <div className="grid md:grid-cols-2 gap-0">
           {/* Left Side - Image */}
@@ -126,6 +126,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProduct
               style={{ objectFit: "cover" }}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="w-full h-full"
+              onError={(e) => {
+                console.log("Image failed to load:", imageSrc);
+                e.currentTarget.src = "/placeholder-image.jpg";
+              }}
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
             />
 
             {product.images && product.images.length > 1 && (
@@ -247,12 +253,16 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProduct
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Package className="h-5 w-5 text-blue-600" />
-                <span className="cursor-pointer hover:cyan-600 transition-colors hover:underline"
-                onClick={() =>
-                  router.push(
-                    `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
-                  )
-                }>Genuine {product.manufacturer} parts</span>
+                <span
+                  className="cursor-pointer hover:cyan-600 transition-colors hover:underline"
+                  onClick={() =>
+                    router.push(
+                      `/manufacturer?manufacturer=${product.manufacturer}` // Remove 'products/'
+                    )
+                  }
+                >
+                  Genuine {product.manufacturer} parts
+                </span>
               </div>
             </div>
 
@@ -298,7 +308,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onProduct
           mode="edit"
         />
       )}
-      
     </div>
   );
 };

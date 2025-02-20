@@ -6,7 +6,6 @@ import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
 import { Product } from "@/types/product";
 import Image from "next/image";
 
-
 interface SellPartModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,9 +15,9 @@ interface SellPartModalProps {
 }
 
 interface ImageState {
-  existingImages: string[];  // URLs of images already on the server
-  newImages: File[];         // New image files to upload
-  previews: string[];       // Combined preview URLs
+  existingImages: string[]; // URLs of images already on the server
+  newImages: File[]; // New image files to upload
+  previews: string[]; // Combined preview URLs
 }
 
 // Image validation constants
@@ -51,7 +50,7 @@ const SellPartModal = ({
   const [imageState, setImageState] = useState<ImageState>({
     existingImages: [],
     newImages: [],
-    previews: []
+    previews: [],
   });
 
   // Initialize selected category if editing
@@ -82,7 +81,7 @@ const SellPartModal = ({
   };
 
   const getImageUrl = (imageName: string) => {
-    if (!imageName) return '';
+    if (!imageName) return "";
     if (imageName.startsWith("data:image")) {
       return imageName;
     }
@@ -98,18 +97,16 @@ const SellPartModal = ({
       setImageState({
         existingImages: product.images,
         newImages: [],
-        previews: product.images.map(img => getImageUrl(img))
+        previews: product.images.map((img) => getImageUrl(img)),
       });
     } else {
       setImageState({
         existingImages: [],
         newImages: [],
-        previews: []
+        previews: [],
       });
     }
   }, [product]);
-
-  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -135,10 +132,10 @@ const SellPartModal = ({
     });
 
     if (validFiles.length > 0) {
-      setImageState(prev => ({
+      setImageState((prev) => ({
         ...prev,
         newImages: [...prev.newImages, ...validFiles],
-        previews: [...prev.previews, ...newPreviews]
+        previews: [...prev.previews, ...newPreviews],
       }));
     }
   };
@@ -146,65 +143,68 @@ const SellPartModal = ({
   const removeImage = async (index: number) => {
     try {
       const totalExisting = imageState.existingImages.length;
-      
+
       if (index < totalExisting) {
         // It's an existing image - need to delete from server first
         const imageToDelete = imageState.existingImages[index];
-        console.log('Attempting to delete image:', imageToDelete);
-      console.log('Full URL:', `http://localhost:3000/api/products/${product?.id}/images/${encodeURIComponent(imageToDelete)}`);
-        
+        console.log("Attempting to delete image:", imageToDelete);
+        console.log(
+          "Full URL:",
+          `http://localhost:3000/api/products/${product?.id}/images/${encodeURIComponent(imageToDelete)}`
+        );
+
         const response = await fetch(
           `http://localhost:3000/api/products/${product?.id}/images/${encodeURIComponent(imageToDelete)}`,
           {
-            method: 'DELETE',
+            method: "DELETE",
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem("token")}`,
-            }
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
         );
-  
+
         if (!response.ok) {
-          throw new Error('Failed to delete image from server');
+          throw new Error("Failed to delete image from server");
         }
-  
+
         // Only update local state if server delete was successful
-        setImageState(prev => {
+        setImageState((prev) => {
           const newState = { ...prev };
-          newState.existingImages = prev.existingImages.filter((_, i) => i !== index);
+          newState.existingImages = prev.existingImages.filter(
+            (_, i) => i !== index
+          );
           newState.previews = [
-            ...newState.existingImages.map(img => getImageUrl(img)),
-            ...newState.newImages.map(file => URL.createObjectURL(file))
+            ...newState.existingImages.map((img) => getImageUrl(img)),
+            ...newState.newImages.map((file) => URL.createObjectURL(file)),
           ];
           return newState;
         });
       } else {
         // It's a new image that hasn't been uploaded yet
-        setImageState(prev => {
+        setImageState((prev) => {
           const newState = { ...prev };
           const newIndex = index - totalExisting;
           URL.revokeObjectURL(prev.previews[index]); // Clean up preview URL
           newState.newImages = prev.newImages.filter((_, i) => i !== newIndex);
           newState.previews = [
-            ...newState.existingImages.map(img => getImageUrl(img)),
-            ...newState.newImages.map(file => URL.createObjectURL(file))
+            ...newState.existingImages.map((img) => getImageUrl(img)),
+            ...newState.newImages.map((file) => URL.createObjectURL(file)),
           ];
           return newState;
         });
       }
     } catch (error) {
-      console.error('Error removing image:', error);
+      console.error("Error removing image:", error);
       // Show error to user
-      setError('Failed to delete image. Please try again.');
+      setError("Failed to delete image. Please try again.");
     }
   };
-
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-  
+
     try {
       const productData = {
         name: formData.name.trim(),
@@ -218,32 +218,31 @@ const SellPartModal = ({
         warranty: formData.warranty.trim(),
         stock: Number(formData.stock),
         condition: formData.condition || "new",
-        //images: imageState.existingImages // Include existing images in product data
       };
-  
+
       if (mode === "create") {
         // Create logic
         const formDataToSend = new FormData();
-        formDataToSend.append('productData', JSON.stringify(productData));
-        
+        formDataToSend.append("productData", JSON.stringify(productData));
+
         if (imageState.newImages.length > 0) {
           imageState.newImages.forEach((image) => {
-            formDataToSend.append('images', image);
+            formDataToSend.append("images", image);
           });
         }
-  
+
         const response = await fetch("http://localhost:3000/api/products", {
           method: "POST",
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: formDataToSend
+          body: formDataToSend,
         });
-  
+
         if (!response.ok) {
           throw new Error("Failed to create product");
         }
-  
+
         const createdProduct = await response.json();
         onSuccess?.(createdProduct);
         onClose();
@@ -252,51 +251,51 @@ const SellPartModal = ({
         if (!product?.id) {
           throw new Error("Product ID is required for updates");
         }
-  
+
         // First update the product data
         const updateResponse = await fetch(
           `http://localhost:3000/api/products/${product.id}`,
           {
-            method: 'PUT',
+            method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: JSON.stringify(productData)
+            body: JSON.stringify(productData),
           }
         );
-  
+
         if (!updateResponse.ok) {
           throw new Error(`Failed to update product: ${updateResponse.status}`);
         }
-  
+
         let updatedProduct = await updateResponse.json();
-  
+
         // Only upload new images if there are any
         if (imageState.newImages.length > 0) {
           const imageFormData = new FormData();
           imageState.newImages.forEach((image) => {
-            imageFormData.append('images', image);
+            imageFormData.append("images", image);
           });
-  
+
           const imageUploadResponse = await fetch(
             `http://localhost:3000/api/products/${product.id}/images`,
             {
-              method: 'POST',
+              method: "POST",
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
-              body: imageFormData
+              body: imageFormData,
             }
           );
-  
+
           if (!imageUploadResponse.ok) {
             throw new Error("Failed to upload images");
           }
-  
+
           updatedProduct = await imageUploadResponse.json();
         }
-  
+
         onSuccess?.(updatedProduct);
         onClose();
       }
@@ -315,14 +314,14 @@ const SellPartModal = ({
   //   setImages([]);
   //   setPreviews([]);
 
-    // Always set initial state, even if product is undefined
-    // const initialImages = product?.images ?? [];
-    // if (initialImages.length > 0) {
-    //   // Use unique image URLs to prevent duplicate keys
-    //   const uniqueImageUrls = [...new Set(initialImages.map(getImageUrl))];
-    //   setPreviews(uniqueImageUrls);
+  // Always set initial state, even if product is undefined
+  // const initialImages = product?.images ?? [];
+  // if (initialImages.length > 0) {
+  //   // Use unique image URLs to prevent duplicate keys
+  //   const uniqueImageUrls = [...new Set(initialImages.map(getImageUrl))];
+  //   setPreviews(uniqueImageUrls);
 
-      // Fetch image files
+  // Fetch image files
   //     const fetchImages = async () => {
   //       try {
   //         const imageFiles = await Promise.all(
@@ -351,7 +350,6 @@ const SellPartModal = ({
   // }, [product]);
 
   if (!isOpen) return null;
-  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -568,35 +566,50 @@ const SellPartModal = ({
                 <p className="mt-2 text-sm text-red-600">{imageError}</p>
               )}
 
-{imageState.previews.map((preview, index) => (
-  <div key={`${preview}-${index}`} className="relative inline-block">
-    {preview.startsWith('data:') ? (
-      // For local previews (not yet uploaded)
-      <img 
-        src={preview} 
-        alt={`Preview ${index + 1}`} 
-        className="h-24 w-24 object-cover rounded"
-      />
-    ) : (
-      // For uploaded images (Vercel Blob URLs)
-      <Image 
-        src={preview} 
-        alt={`Preview ${index + 1}`} 
-        width={96}
-        height={96}
-        loading="lazy"
-        className="object-cover rounded"
-      />
-    )}
-    <button
-      type="button"
-      onClick={() => removeImage(index)}
-      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-sm"
-    >
-      <X className="h-3 w-3" />
-    </button>
-  </div>
-))}
+              {imageState.previews.map((preview, index) => (
+                <div
+                  key={`${preview}-${index}`}
+                  className="relative inline-block m-1"
+                >
+                  {preview.startsWith("data:") ? (
+                    // For local previews (not yet uploaded)
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="h-24 w-24 object-cover rounded"
+                      onError={(e) => {
+                        console.log("Local preview failed to load:", preview);
+                        e.currentTarget.src = "/placeholder-image.jpg";
+                      }}
+                    />
+                  ) : (
+                    // For uploaded images (Vercel Blob URLs or other URLs)
+                    <div className="relative h-24 w-24">
+                      <Image
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        width={96} // Keep this small - actual display size
+                        height={96}
+                        quality={60} // Lower quality for previews
+                        sizes="96px" // Tell Next.js exactly what size we need
+                        loading="eager"
+                        className="object-cover rounded"
+                        onError={(e) => {
+                          console.log("Preview failed to load:", preview);
+                          e.currentTarget.src = "/placeholder-image.jpg";
+                        }}
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-sm"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
               {uploadProgress > 0 && uploadProgress < 100 && (
                 <div className="mt-2">
                   <div className="bg-gray-200 rounded-full h-2.5">

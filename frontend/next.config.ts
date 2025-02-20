@@ -2,6 +2,10 @@
 /** @type {import('next/config').NextConfig} */
 const nextConfig = {
   images: {
+
+    deviceSizes: [96, 640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96],
+
     remotePatterns: [
       {
         protocol: 'https',
