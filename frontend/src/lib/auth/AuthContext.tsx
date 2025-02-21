@@ -1,6 +1,5 @@
 // src/lib/auth/AuthContext.tsx
 'use client';
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { User, RegisterData, AuthResponse } from '@/types/auth';
 import { useRouter } from 'next/navigation';
@@ -11,8 +10,9 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthResponse>;
   register: (userData: RegisterData) => Promise<AuthResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => void;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,17 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  // Debugging effect
-  // useEffect(() => {
-  //   console.log('AuthContext user state:', user);
-  // }, [user]);
-
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
-
         if (!token || !storedUser) {
           // If either is missing, clear everything
           localStorage.removeItem('token');
@@ -68,32 +62,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isHydrated) {
       return;
     }
-
     if (isHydrated) {
       checkAuth();
     }
-
   }, [isHydrated]);
-
   
-
+  const refreshUser = async (): Promise<User | null> => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      
+      const response = await api.get('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      const userData = (response.data as { user: User }).user;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+      return null;
+    }
+  };
+  
   const updateUserProfile = async (updates: Partial<User>) => {
     if (user) {
-        const updatedUser = { ...user, ...updates };
-        setUser(updatedUser);
-        
-        // If you're using localStorage to persist the user data:
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        
-        // Log to debug
-        console.log('Updated user profile:', {
-            hasProfilePicture: !!updatedUser.profilePicture
-        });
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      
+      // If you're using localStorage to persist the user data:
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Log to debug
+      console.log('Updated user profile:', {
+        hasProfilePicture: !!updatedUser.profilePicture
+      });
     }
-};
-
-  
-  
+  };
   
   const login = async (email: string, password: string) => {
     try {
@@ -110,16 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
   
       const data = await response.json();
-      console.log('Login response:', data);
-
+      
+      // Important: Set user state IMMEDIATELY before any other operations
       setUser(data.user);
-  
+      
+      // Then persist to localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-
-      console.log('Updated user state:', data.user);
-  
-      setUser(data.user);
+      
+      console.log('Login successful, user state updated:', data.user);
+      
       return data;
     } catch (error) {
       console.error('Login error:', error);
@@ -127,22 +135,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-
   const register = async (userData: RegisterData) => {
     try {
       const { data } = await api.post<AuthResponse>('/auth/register', userData);
       
-      localStorage.setItem('token', data.token);
+      // Set user immediately first
       setUser(data.user);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
   
       return data;
     } catch (error) {
-      console.error('Login error:', error);
-  
+      console.error('Registration error:', error);
       throw error;
     }
   };
-
+  
   const logout = async () => {
     try {
       // Clear all auth-related items from localStorage
@@ -155,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Force a clean state
       setLoading(true);
       setLoading(false);
-
+      
       // Optional: Clear any other auth-related storage
       sessionStorage.clear(); // If you're using session storage
       
@@ -170,13 +178,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     }
   };
-
-
+  
   // Return null during initial hydration
   if (!isHydrated) {
     return null;
   }
-
+  
   return (
     <AuthContext.Provider
       value={{
@@ -185,7 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
-        updateUserProfile
+        updateUserProfile,
+        refreshUser
       }}
     >
       {children}

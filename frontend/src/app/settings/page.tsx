@@ -179,6 +179,8 @@ const SettingsPage = () => {
     setSuccess("");
 
     try {
+
+      console.log("Sending seller data:", sellerFormData);
       // First, add the seller role
       const roleResponse = await fetch("http://localhost:3000/api/users/roles", {
         method: "POST",
@@ -204,6 +206,8 @@ const SettingsPage = () => {
       });
 
       const data = await response.json();
+
+      console.log("Response data:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to create seller profile");
