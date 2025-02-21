@@ -28,6 +28,7 @@ export function DashboardHeader({
   onProductCreated,
   onProductSelected
 }: DashboardHeaderProps) {
+  
   const router = useRouter();
   const { user, logout } = useAuth();
   const { loading } = useAuth();
@@ -40,6 +41,9 @@ export function DashboardHeader({
   const [inputValue, setInputValue] = useState(searchTerm);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+
+  // At the top of your DashboardHeader component
+console.log("DashboardHeader rendering, user:", user);
 
   const fetchSuggestions = useCallback((query: string) => {
     if (!query.trim()) {

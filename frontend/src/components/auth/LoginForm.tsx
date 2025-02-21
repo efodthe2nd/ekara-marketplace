@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 
@@ -15,7 +14,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +31,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       }
       
       // Navigate to dashboard
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
+      //router.push('/dashboard');
     } catch {
       setError('Invalid credentials');
     } finally {
