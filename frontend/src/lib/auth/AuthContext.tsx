@@ -13,6 +13,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => void;
   refreshUser: () => Promise<User | null>;
+  updateCurrentUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -178,6 +179,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     }
   };
+
+  const updateCurrentUser = (userData) => {
+    setUser(userData);
+  };
   
   // Return null during initial hydration
   if (!isHydrated) {
@@ -193,7 +198,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         updateUserProfile,
-        refreshUser
+        refreshUser,
+        updateCurrentUser
       }}
     >
       {children}

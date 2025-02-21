@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, AuthProvider } from "@/lib/auth/AuthContext";
+import { useAuth, AuthProvider} from "@/lib/auth/AuthContext";
+import { User as UserType } from "@/types/auth";
 import {
   User,
   CreditCard,
@@ -14,12 +15,12 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-
 const SettingsPage = () => {
   const [activeSection, setActiveSection] = useState("profile");
   const router = useRouter();
   const { logout } = useAuth();
   const [isSeller, setIsSeller] = useState(false);
+  const { user, updateCurrentUser } = useAuth();
 
   const sections = [
     { id: "profile", label: "Profile", icon: User },
@@ -27,18 +28,18 @@ const SettingsPage = () => {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
     { id: "account", label: "Account", icon: LogOut },
-    { 
-      id: "become-seller", 
+    {
+      id: "become-seller",
       label: (
         <span className="flex items-center">
           Become a Seller
           <span className="ml-2 text-xs">
-          <sup className="bg-yellow-200 text-[8px] px-1 rounded">NEW</sup>
+            <sup className="bg-yellow-200 text-[8px] px-1 rounded">NEW</sup>
           </span>
         </span>
-      ), 
+      ),
       icon: Store,
-      hidden: isSeller // Hide if user is already a seller
+      hidden: isSeller, // Hide if user is already a seller
     },
   ];
 
@@ -179,31 +180,36 @@ const SettingsPage = () => {
     setSuccess("");
 
     try {
-
       console.log("Sending seller data:", sellerFormData);
       // First, add the seller role
-      const roleResponse = await fetch("http://localhost:3000/api/users/roles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ role: "seller" }),
-      });
+      const roleResponse = await fetch(
+        "http://localhost:3000/api/users/roles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ role: "seller" }),
+        }
+      );
 
       if (!roleResponse.ok) {
         throw new Error("Failed to add seller role");
       }
 
       // Then create the seller profile
-      const response = await fetch("http://localhost:3000/api/users/seller-profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(sellerFormData),
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/users/seller-profile",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(sellerFormData),
+        }
+      );
 
       const data = await response.json();
 
@@ -217,10 +223,20 @@ const SettingsPage = () => {
       setIsSeller(true);
       setActiveSection("profile");
 
+      // Create updated user object with seller profile and isSeller = true
+      if (user && user.id) {
+        const updatedUser: UserType = {
+          ...user,
+          isSeller: true,
+          sellerProfile: data.sellerProfile
+        };
+        updateCurrentUser(updatedUser);
+      }
+
       // Update the main form data with seller information
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        ...sellerFormData
+        ...sellerFormData,
       }));
 
       setTimeout(() => {
@@ -228,15 +244,16 @@ const SettingsPage = () => {
       }, 3000);
     } catch (err) {
       console.error("Error creating seller profile:", err);
-      setError(err instanceof Error ? err.message : "Failed to create seller profile");
+      setError(
+        err instanceof Error ? err.message : "Failed to create seller profile"
+      );
       setTimeout(() => {
         setError("");
       }, 3000);
     } finally {
       setIsLoading(false);
     }
-};
-
+  };
 
   // Add these state variables for password fields
   const [passwordData, setPasswordData] = useState({
@@ -370,14 +387,14 @@ const SettingsPage = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Back Button */}
-          <button 
+          <button
             onClick={handleGoBack}
             className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             <span>Back</span>
           </button>
-          
+
           <div className="flex gap-8">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0">
@@ -386,7 +403,7 @@ const SettingsPage = () => {
               </h2>
               <nav className="space-y-1">
                 {sections
-                  .filter(section => !section.hidden)
+                  .filter((section) => !section.hidden)
                   .map((section) => {
                     const Icon = section.icon;
                     return (
@@ -748,7 +765,10 @@ const SettingsPage = () => {
                       {success}
                     </div>
                   )}
-                  <form onSubmit={handleCreateSellerProfile} className="space-y-6">
+                  <form
+                    onSubmit={handleCreateSellerProfile}
+                    className="space-y-6"
+                  >
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
                         Company Name
@@ -808,7 +828,9 @@ const SettingsPage = () => {
                           isLoading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
-                        {isLoading ? "Creating Profile..." : "Create Seller Profile"}
+                        {isLoading
+                          ? "Creating Profile..."
+                          : "Create Seller Profile"}
                       </button>
                     </div>
                   </form>
