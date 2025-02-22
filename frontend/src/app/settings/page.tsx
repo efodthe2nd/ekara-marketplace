@@ -19,6 +19,7 @@ const SettingsPage = () => {
   const [activeSection, setActiveSection] = useState("profile");
   const router = useRouter();
   const { logout } = useAuth();
+  const { refreshUser } = useAuth();
   const [isSeller, setIsSeller] = useState(false);
   const { user, updateCurrentUser } = useAuth();
 
@@ -223,6 +224,8 @@ const SettingsPage = () => {
       setIsSeller(true);
       setActiveSection("profile");
 
+      await refreshUser();
+
       // Create updated user object with seller profile and isSeller = true
       if (user && user.id) {
         const updatedUser: UserType = {
@@ -231,6 +234,7 @@ const SettingsPage = () => {
           sellerProfile: data.sellerProfile
         };
         updateCurrentUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       }
 
       // Update the main form data with seller information

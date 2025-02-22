@@ -12,7 +12,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<User>) => void;
-  refreshUser: () => Promise<User | null>;
+  refreshUser: () => Promise<User | null>;  
   updateCurrentUser: (user: User) => void;
 }
 
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem('token');
       if (!token) return null;
       
-      const response = await api.get('/api/auth/me', {
+      const response = await api.get(`/api/users${user?.id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateCurrentUser = (userData) => {
+  const updateCurrentUser = (userData: User) => {
     setUser(userData);
   };
   
