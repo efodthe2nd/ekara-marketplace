@@ -116,10 +116,21 @@ export class ProductController {
 
   public deleteProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-      await this.productService.deleteProduct(Number(req.params.id));
+      const productId = Number(req.params.id);
+      const userId = (req as AuthRequest).user!.id;
+  
+      await this.productService.deleteProduct(productId, userId);
+      
       res.status(204).send();
     } catch (error: any) {
-      res.status(400).json({ message: error?.message || "An error occurred" });
+      console.error('Error deleting product:', error);
+      if (error.message === 'Product not found') {
+        res.status(404).json({ message: error.message });
+      } else if (error.message.includes('Unauthorized')) {
+        res.status(403).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: 'Failed to delete product' });
+      }
     }
   };
 

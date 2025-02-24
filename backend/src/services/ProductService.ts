@@ -127,13 +127,6 @@ export class ProductService {
     return this.productRepository.save(updatedProduct);
   }
 
-  async deleteProduct(id: number): Promise<void> {
-    const result = await this.productRepository.delete(id);
-    if (result.affected === 0) {
-      throw new Error("Product not found");
-    }
-  }
-
   async listProducts(
     page: number = 1,
     limit: number = 10,
@@ -365,6 +358,46 @@ export class ProductService {
     // Update the product with the new images array
     product.images = updatedImages;
     return this.productRepository.save(product);
+  }
+
+  async deleteProduct(productId: number, userId: number): Promise<void> {
+    try {
+      // First, find the product and include the seller relation
+      const product = await this.productRepository.findOne({
+        where: { id: productId },
+        relations: ['seller', 'seller.user']
+      });
+
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      // Check if the user is the owner of the product
+      if (product.seller.user.id !== userId) {
+        throw new Error('Unauthorized: You can only delete your own products');
+      }
+
+      // If there are images stored, you might want to delete them from storage
+      if (product.images && product.images.length > 0) {
+        // Here you would add logic to delete images from Vercel Blob
+        // You'll need to implement this based on your blob storage setup
+        try {
+          await Promise.all(product.images.map(async (imageUrl) => {
+            // Add your image deletion logic here
+            // Example: await deleteFromVercelBlob(imageUrl);
+          }));
+        } catch (error) {
+          console.error('Error deleting product images:', error);
+          // Continue with product deletion even if image deletion fails
+        }
+      }
+
+      // Delete the product
+      await this.productRepository.remove(product);
+    } catch (error) {
+      console.error('Error in deleteProduct service:', error);
+      throw error;
+    }
   }
 
   
