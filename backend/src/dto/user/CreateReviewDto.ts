@@ -1,6 +1,6 @@
 export class CreateReviewDto {
     sellerId: number;
-    buyerId: number;
+    reviewerId: number;
     rating: number;
     comment: string;
 }

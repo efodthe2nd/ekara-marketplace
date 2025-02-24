@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
         email: string;
         isBuyer: boolean;
         isSeller: boolean;
-    };
+    } | null;
 }
 
 export const authMiddleware = (
