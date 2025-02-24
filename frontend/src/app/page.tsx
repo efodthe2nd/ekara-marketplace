@@ -1,13 +1,20 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Particles } from 'react-tsparticles';
 import { loadFull } from 'tsparticles';
 import { Engine } from 'tsparticles-engine';
 import LoginForm from '@/components/auth/LoginForm';
+import Link from 'next/link';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function Home() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const loginRef = useRef<HTMLDivElement>(null);
+  const { user, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const particlesInit = useCallback(async (engine: Engine) => {
     await loadFull(engine);
@@ -24,6 +31,20 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!loading) {  // Only check after auth state is loaded
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [user, loading, router]);
+
+  if (isLoading || loading) {
+    return <LoadingSpinner />; // Or your loading component
+  }
 
   return (
     <main className="relative min-h-screen bg-gray-900 text-white overflow-hidden">
@@ -87,12 +108,12 @@ export default function Home() {
             )}
           </div>
           
-          <a
+          <Link
             href="/auth/register"
             className="block w-full text-center py-2 px-4 border border-gray-300 rounded hover:bg-gray-50 hover:text-black"
           >
             Register
-          </a>
+          </Link>
         </div>
       </div>
     </main>

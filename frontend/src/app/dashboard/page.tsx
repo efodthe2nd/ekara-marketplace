@@ -7,6 +7,7 @@ import { Package } from "lucide-react";
 import api from "@/lib/api/axios";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 
 
@@ -131,11 +132,7 @@ const DashboardPage = () => {
   };
 
   if (loading && products.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-xl text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (

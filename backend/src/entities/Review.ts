@@ -6,8 +6,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { BuyerProfile } from "./Buyer";
+import { BuyerProfile, Profile } from "./Buyer";
 import { SellerProfile } from "./SellerProfile";
+
 
 @Entity('reviews')
 export class Review {
@@ -15,7 +16,10 @@ export class Review {
     id: number;
 
     @ManyToOne(() => BuyerProfile)
-    buyer: BuyerProfile;
+    buyerReviewer: BuyerProfile;
+
+    @ManyToOne(() => SellerProfile)
+    sellerReviewer: SellerProfile;
 
     @ManyToOne(() => SellerProfile)
     seller: SellerProfile;
@@ -47,3 +51,5 @@ export class Review {
     @UpdateDateColumn()
     updatedAt: Date;
 }
+
+

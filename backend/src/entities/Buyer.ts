@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
+import { SellerProfile } from './SellerProfile';
 import { Order } from './Order';
 
 @Entity('buyer_profiles')
@@ -29,3 +30,5 @@ export class BuyerProfile {
     @Column({ nullable: true })
     phoneNumber: string; 
 }
+
+export type Profile = BuyerProfile | SellerProfile;
