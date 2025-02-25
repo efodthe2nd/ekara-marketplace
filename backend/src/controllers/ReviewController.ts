@@ -12,11 +12,11 @@ export class ReviewController {
             }
 
             const { sellerId, rating, comment } = req.body;
-            const buyerId = req.user.id;
+            const reviewerId = req.user.id;
 
             const review = await this.reviewService.createReview({
                 sellerId,
-                buyerId,
+                reviewerId,  // Changed from buyerId to reviewerId
                 rating,
                 comment
             });

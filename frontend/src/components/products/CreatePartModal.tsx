@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
 import { Product } from "@/types/product";
+import ProductActions from "./ProductAction";
 import Image from "next/image";
 
 interface SellPartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (updatedProduct: Product) => void;
+  onSuccess?: (updatedProduct: Product | null) => void;
   product?: Product;
   mode?: "create" | "edit";
 }
@@ -622,28 +623,55 @@ const SellPartModal = ({
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : mode === "create" ? (
-                "Create Part"
-              ) : (
-                "Update Part"
-              )}
-            </button>
-          </div>
+          {/* In SellPartModal.tsx, replace the existing buttons section */}
+<div className="flex justify-end space-x-3 mt-6">
+  <button
+    type="button"
+    onClick={onClose}
+    className="px-4 py-2 text-gray-600 hover:text-gray-700"
+  >
+    Cancel
+  </button>
+  <ProductActions 
+    onEdit={() => {
+      // Add your onEdit logic here
+    }}
+    onDelete={async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/products/${product?.id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete product');
+        }
+
+        onSuccess?.(null); // Notify parent component
+        onClose();
+      } catch (err) {
+        setError('Failed to delete product');
+        console.error('Error deleting product:', err);
+      }
+    }}
+    showDelete={mode === 'edit'}
+  />
+  <button
+    type="submit"
+    disabled={isLoading}
+    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+  >
+    {isLoading ? (
+      <Loader2 className="h-5 w-5 animate-spin" />
+    ) : mode === "create" ? (
+      "Create Part"
+    ) : (
+      "Update Part"
+    )}
+  </button>
+</div>
         </form>
       </div>
     </div>

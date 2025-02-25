@@ -12,45 +12,59 @@ export class ReviewService {
   ) {}
 
   async createReview(data: CreateReviewDto): Promise<Review> {
-    const { sellerId, buyerId, rating, comment } = data;
-
+    const { sellerId, reviewerId, rating, comment } = data;
+    
     if (rating < 1 || rating > 5) {
-      throw new Error("Rating must be between 1 and 5");
+        throw new Error("Rating must be between 1 and 5");
     }
 
+    // Find seller
     const seller = await this.sellerRepository.findOne({ where: { userId: sellerId } });
     if (!seller) {
-      throw new Error("Seller not found");
+        throw new Error("Seller not found");
     }
 
-    const buyerUser = await this.userRepository.findOne({
-      where: { id: buyerId },
-      relations: ["buyerProfile"],
+    // Find reviewer user with both profiles
+    const reviewerUser = await this.userRepository.findOne({
+        where: { id: reviewerId },
+        relations: ["buyerProfile", "sellerProfile"],
     });
 
-    if (!buyerUser?.buyerProfile) {
-      throw new Error("Buyer profile not found");
+    if (!reviewerUser) {
+        throw new Error("User not found");
     }
 
+    // Check for either buyer or seller profile
+    const reviewer = reviewerUser.buyerProfile || reviewerUser.sellerProfile;
+    if (!reviewer) {
+        throw new Error("User must have either a buyer or seller profile to leave a review");
+    }
+
+    // Create review
     const review = this.reviewRepository.create({
       seller,
-      buyer: buyerUser.buyerProfile,
       rating,
       comment,
-    });
+  });
+
+  if (reviewerUser.buyerProfile) {
+      review.buyerReviewer = reviewerUser.buyerProfile;
+  } else if (reviewerUser.sellerProfile) {
+      review.sellerReviewer = reviewerUser.sellerProfile;
+  }
 
     const savedReview = await this.reviewRepository.save(review);
 
     // Increment numReviews
     await this.sellerRepository
-      .createQueryBuilder()
-      .update(SellerProfile)
-      .set({ numReviews: () => "numReviews + 1" })
-      .where("id = :sellerId", { sellerId: seller.id })
-      .execute();
+        .createQueryBuilder()
+        .update(SellerProfile)
+        .set({ numReviews: () => "numReviews + 1" })
+        .where("id = :sellerId", { sellerId: seller.id })
+        .execute();
 
     return savedReview;
-  }
+}
 
   async getSellerStats(sellerId: number): Promise<{ averageRating: number; totalReviews: number }> {
     const reviews = await this.reviewRepository
@@ -127,7 +141,7 @@ export class ReviewService {
       throw new Error("Review not found");
     }
 
-    if (review.buyer.id !== userId) {
+    if ((review.buyerReviewer && review.buyerReviewer.id !== userId) || (review.sellerReviewer && review.sellerReviewer.id !== userId)) {
       throw new Error("Only the reviewer can delete this review");
     }
 

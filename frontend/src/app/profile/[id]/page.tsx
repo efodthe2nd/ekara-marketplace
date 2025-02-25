@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import ReactCrop, { type Crop, PixelCrop } from "react-image-crop";
+import ProductActions from "@/components/products/ProductAction";
 import "react-image-crop/dist/ReactCrop.css";
 import { useAuth } from "@/lib/auth/AuthContext";
 import {
@@ -730,8 +731,38 @@ const ProfilePage = () => {
               products.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden"
+                  className="bg-white rounded-xl shadow-sm overflow-hidden group relative"
                 >
+                  {/* Add hover actions */}
+    <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+      <ProductActions
+        onEdit={() => {
+          // Implement your edit logic here
+          // For example, open the SellPartModal in edit mode
+        }}
+        onDelete={async () => {
+          try {
+            const response = await fetch(`http://localhost:3000/api/products/${product.id}`, {
+              method: 'DELETE',
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to delete product');
+            }
+
+            // Refresh products list
+            fetchProducts();
+          } catch (err) {
+            setError('Failed to delete product');
+            console.error('Error deleting product:', err);
+          }
+        }}
+        showDelete={true}
+      />
+    </div>
                   <div className="aspect-w-3 aspect-h-2">
                     <Image
                       src={product.images?.[0] || `/api/placeholder/400/300`}

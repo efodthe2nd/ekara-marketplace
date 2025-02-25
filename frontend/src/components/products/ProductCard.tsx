@@ -79,7 +79,7 @@ export function ProductCard({ product: initialProduct }: { product: Product }) {
 
           <div className="flex justify-between items-center">
             <span className="text-lg font-bold text-gray-900">
-              ${parseFloat(product.price.toString()).toFixed(2)}
+              ${product.price}
             </span>
             <div className="flex items-center">
               {product.stock > 0 ? (
