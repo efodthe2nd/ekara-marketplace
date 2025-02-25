@@ -21,6 +21,11 @@ const DashboardPage = () => {
   const limit = 10;
   const router = useRouter();
 
+  const handleProductDelete = (productId: string) => {
+    // Remove the product from local state
+    setProducts(prevProducts => prevProducts.filter(product => product.id !== productId));
+  };
+
   const fetchProducts = useCallback(async (pageNum: number = 1) => {
     try {
       setLoading(true);
@@ -190,7 +195,7 @@ const DashboardPage = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} onDelete={handleProductDelete}  />
                 ))}
               </div>
               {hasMore && (

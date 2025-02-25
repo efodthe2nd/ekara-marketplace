@@ -19,6 +19,7 @@ interface ProductModalProps {
   product: Product;
   onClose: () => void;
   onProductUpdate?: (updatedProduct: Product) => void;
+  onProductDelete?: (productId: string) => void;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({

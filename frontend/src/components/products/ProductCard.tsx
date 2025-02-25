@@ -5,7 +5,7 @@ import { Product } from "@/types/product";
 import ProductModal from "./ProductModal";
 import { useState } from "react";
 
-export function ProductCard({ product: initialProduct }: { product: Product }) {
+export function ProductCard({ product: initialProduct, onDelete }: { product: Product, onDelete?: (productId: string) => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState(initialProduct);
 
@@ -34,6 +34,13 @@ export function ProductCard({ product: initialProduct }: { product: Product }) {
   const handleProductUpdate = (updatedProduct: Product) => {
     // Update the local state with the new product data
     setProduct(updatedProduct);
+  };
+
+  const handleProductDelete = (productId: string) => {
+    // Call the parent's onDelete function if provided
+    if (onDelete) {
+      onDelete(productId);
+    }
   };
 
   return (
@@ -101,7 +108,7 @@ export function ProductCard({ product: initialProduct }: { product: Product }) {
           product={product}
           onClose={() => setIsModalOpen(false)}
           onProductUpdate={handleProductUpdate}
-          //onUpdate={(newProduct: Product) => setUpdatedProduct(newProduct)}
+          onProductDelete={handleProductDelete}
         />
       )}
     </>
