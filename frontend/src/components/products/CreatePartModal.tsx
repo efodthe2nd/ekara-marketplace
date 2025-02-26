@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect} from "react";
 import { X, Loader2, Image as ImageIcon } from "lucide-react";
 import { CategoryAutocomplete, Category } from "../common/CategoryAutocomplete";
 import { Product } from "@/types/product";
@@ -71,7 +70,7 @@ const SellPartModal = ({
   const [imageError, setImageError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  
 
   const validateImage = (file: File): string | null => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
@@ -654,7 +653,7 @@ const SellPartModal = ({
         onSuccess?.(null); // Notify parent component
         onClose();
         // Refresh the current route
-      router.refresh();
+        window.location.reload();
       } catch (err) {
         setError('Failed to delete product');
         console.error('Error deleting product:', err);
