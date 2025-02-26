@@ -5,9 +5,14 @@ import { Product } from "@/types/product";
 import ProductModal from "./ProductModal";
 import { useState } from "react";
 
-export function ProductCard({ product: initialProduct, onDelete }: { product: Product, onDelete?: (productId: string) => void }) {
+export function ProductCard({ product: initialProduct, onProductDelete }: { product: Product, onProductDelete?: (productId: string) => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [product, setProduct] = useState(initialProduct);
+  const [isDeleted, setIsDeleted] = useState(false);
+
+  if (isDeleted) {
+    return null;
+  }
 
   // Updated image URL handling with backwards compatibility
   const getImageUrl = (imageName: string) => {
@@ -38,9 +43,14 @@ export function ProductCard({ product: initialProduct, onDelete }: { product: Pr
 
   const handleProductDelete = (productId: string) => {
     // Call the parent's onDelete function if provided
-    if (onDelete) {
-      onDelete(productId);
+
+    setIsDeleted(true);
+
+
+    if (onProductDelete) {
+      onProductDelete(productId);
     }
+          
   };
 
   return (
