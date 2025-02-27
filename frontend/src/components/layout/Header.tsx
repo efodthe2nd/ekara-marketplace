@@ -46,7 +46,7 @@ export function Header() {
   }
 
   return (
-    <header className="bg-gray-900 text-white py-4 shadow">
+    <header className="fixed top-0 left-0 right-0 bg-black bg-opacity-50 text-white py-4 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold ml-4">
           CheckPartsOnline

@@ -1,39 +1,23 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Particles } from 'react-tsparticles';
-import { loadFull } from 'tsparticles';
-import { Engine } from 'tsparticles-engine';
-import LoginForm from '@/components/auth/LoginForm';
-import Link from 'next/link';
+import Link from "next/link";
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import * as THREE from 'three';
 
 export default function Home() {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const loginRef = useRef<HTMLDivElement>(null);
-  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const requestRef = useRef<number | null>(null);
+  const { user, loading } = useAuth();
   const router = useRouter();
 
-  const particlesInit = useCallback(async (engine: Engine) => {
-    await loadFull(engine);
-  }, []);
-
-  // Handle click outside
+  // Auth redirection
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (loginRef.current && !loginRef.current.contains(event.target as Node)) {
-        setIsLoginOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (!loading) {  // Only check after auth state is loaded
+    if (!loading) {
       if (user) {
         router.push('/dashboard');
       } else {
@@ -42,79 +26,161 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
+  // Plasma shader setup
+  useEffect(() => {
+    if (!canvasRef.current || isLoading) return;
+
+    const container = canvasRef.current;
+    
+    // Initialize THREE.js scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); // Perfect square for proper centering
+    
+    // Create renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor(0x000000, 1);
+    
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+    
+    // Create a full-screen quad
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    
+    // Create shader material
+    const shaderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uScale: { value: 0.75 },
+        uResolution: { value: new THREE.Vector2(width, height) }
+      },
+      vertexShader: `
+        void main() {
+          gl_Position = vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec2 uResolution;
+        uniform float uScale; // Scale control
+        
+        vec2 centerUV(vec2 uv, vec2 resolution) {
+          // Perfectly center and scale the coordinates
+          return ((2.0 * uv - resolution) / min(resolution.x, resolution.y)) * uScale;
+        }
+        
+        void main() {
+          vec2 p = centerUV(gl_FragCoord.xy, uResolution);
+          float time = uTime * 0.5;
+          
+          float z = 0.0;
+          z += 4.0 - 4.0 * abs(0.7 - dot(p, p));
+          
+          vec2 f = p * z;
+          vec4 color = vec4(0.0);
+          
+          for (float i = 1.0; i <= 8.0; i++) {
+            f += cos(f.yx * i + vec2(0.0, i) + time) / i * 0.7;
+            color += (sin(f) + 1.0).xyyx * abs(f.x - f.y) / i;
+          }
+          
+          color = tanh(7.0 * exp(z - 4.0 - p.y * vec4(-1.0, 1.0, 2.0, 0.0)) / color);
+          gl_FragColor = color;
+        }
+      `
+    });
+    
+    // Create and add mesh to scene
+    const quad = new THREE.Mesh(geometry, shaderMaterial);
+    scene.add(quad);
+    
+    // Animation loop
+    const animate = () => {
+      shaderMaterial.uniforms.uTime.value += 0.01;
+      renderer.render(scene, camera);
+      requestRef.current = requestAnimationFrame(animate);
+    };
+    
+    requestRef.current = requestAnimationFrame(animate);
+    
+    // Handle window resizing
+    const handleResize = () => {
+      if (!canvasRef.current || !rendererRef.current) return;
+      
+      const width = canvasRef.current.clientWidth;
+      const height = canvasRef.current.clientHeight;
+      
+      rendererRef.current.setSize(width, height);
+      shaderMaterial.uniforms.uResolution.value.set(width, height);
+      
+      // Adjust scale based on aspect ratio to ensure the effect is fully visible
+      const aspectRatio = width / height;
+      if (aspectRatio > 1) {
+        // Wider screen - ensure vertical visibility
+        shaderMaterial.uniforms.uScale.value = 0.75;
+      } else {
+        // Taller screen - ensure horizontal visibility
+        shaderMaterial.uniforms.uScale.value = 0.75 * aspectRatio;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
+      
+      window.removeEventListener('resize', handleResize);
+      if (rendererRef.current && container) {
+        container.removeChild(rendererRef.current.domElement);
+        rendererRef.current.dispose();
+        rendererRef.current = null;
+      }
+      
+      geometry.dispose();
+      shaderMaterial.dispose();
+    };
+  }, [isLoading]);
+
   if (isLoading || loading) {
-    return <LoadingSpinner />; // Or your loading component
+    return <LoadingSpinner />;
   }
 
   return (
-    <main className="relative min-h-screen bg-gray-900 text-white overflow-hidden">
-      {/* Particle Field */}
-      <Particles
-        id="tsparticles"
-        init={particlesInit}
-        className="absolute inset-0"
-        options={{
-          fpsLimit: 60,
-          interactivity: {
-            events: {
-              onHover: {
-                enable: true,
-                mode: "repulse",
-              },
-              onClick: {
-                enable: true,
-                mode: "push",
-              },
-              resize: true,
-            },
-            modes: {
-              repulse: {
-                distance: 100,
-                duration: 0.4,
-              },
-            },
-          },
-          particles: {
-            color: { value: "#ffffff" },
-            links: { color: "#ffffff", distance: 150, enable: true, opacity: 0.5, width: 1 },
-            move: { enable: true, speed: 2, direction: "none", outModes: { default: "bounce" } },
-            number: { value: 50, density: { enable: true, area: 800 } },
-            opacity: { value: 0.5 },
-            shape: { type: "circle" },
-            size: { value: { min: 1, max: 5 } },
-          },
-          detectRetina: true,
-        }}
+    <main 
+      ref={containerRef}
+      className="relative min-h-screen bg-black text-white overflow-hidden flex flex-col items-center justify-center"
+    >
+      {/* THREE.js canvas container */}
+      <div 
+        ref={canvasRef} 
+        className="absolute inset-0 z-0 flex items-center justify-center"
       />
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-4xl font-bold mb-8">Spareparts Marketplace</h1>
-        <div className="space-y-4 w-full max-w-md">
-          {/* Login Button and Dropdown */}
-          <div className="relative" ref={loginRef}>
-            <button
-              onClick={() => setIsLoginOpen(!isLoginOpen)}
-              className="w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Login
-            </button>
-            
-            {/* Login Form Dropdown */}
-            {isLoginOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl p-6 transform origin-top transition-transform">
-                <LoginForm onSuccess={() => setIsLoginOpen(false)} />
-              </div>
-            )}
-          </div>
-          
-          <Link
-            href="/auth/register"
-            className="block w-full text-center py-2 px-4 border border-gray-300 rounded hover:bg-gray-50 hover:text-black"
+      
+      {/* Full-page semi-transparent overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-50 z-10" />
+      
+      {/* New content overlay */}
+      <div className="relative z-20 text-center px-4 max-w-screen-md mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          Quality Spare Parts Marketplace
+        </h1>
+        <p className="text-xl md:text-2xl mb-6">
+          Find the exact parts you need at competitive prices
+        </p>
+        <Link
+            href="/dashboard"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
-            Register
+            Explore
           </Link>
-        </div>
       </div>
     </main>
   );
