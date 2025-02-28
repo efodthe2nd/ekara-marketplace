@@ -29,6 +29,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 }) => {
   const { user } = useAuth();
   const router = useRouter();
+  const [buttonText, setButtonText] = useState(user ? "Contact Seller": "Login to Contact Seller");
   const [isProductOwner, setIsProductOwner] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -88,21 +89,28 @@ const ProductModal: React.FC<ProductModalProps> = ({
     if (!user) {
       router.push("/auth/login");
     } else {
-      router.push(`/order/${product.id}`);
+      if (user && user.sellerProfile && user.sellerProfile.phoneNumber) {
+        setButtonText(user.sellerProfile.phoneNumber);
+      } else {
+        // Handle case where user is not logged in or phone number is not available
+        setButtonText("Phone number not available");
+      }
     }
   };
 
-  const handleProductUpdateSuccess = (updatedProduct: Product) => {
+  const handleProductUpdateSuccess = (updatedProduct: Product | null) => {
     // Make sure to preserve seller information when updating
-    const updatedProductWithSeller = {
-      ...updatedProduct,
-      seller: product.seller, // Keep the original seller information
-    };
-    
-    // Call the passed update callback if it exists
-    onProductUpdate?.(updatedProductWithSeller);
-    setShowEditModal(false);
-    onClose();
+    if (updatedProduct) {
+      const updatedProductWithSeller = {
+        ...updatedProduct,
+        seller: product.seller, // Keep the original seller information
+      };
+      
+      // Call the passed update callback if it exists
+      onProductUpdate?.(updatedProductWithSeller);
+      setShowEditModal(false);
+      onClose();
+    }
   };
 
   return (
@@ -307,7 +315,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               onClick={handleBuyNow}
               className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
             >
-              {user ? "Contact Seller" : "Login to Contact Seller"}
+              {buttonText}
             </button>
           </div>
         </div>
