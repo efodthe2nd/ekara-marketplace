@@ -55,7 +55,7 @@ export default function Home() {
     const shaderMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uScale: { value: 1.15 },
+        uScale: { value: 1.3 },
         uResolution: { value: new THREE.Vector2(width, height) }
       },
       vertexShader: `
