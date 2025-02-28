@@ -89,8 +89,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
     if (!user) {
       router.push("/auth/login");
     } else {
-      if (user && user.sellerProfile && user.sellerProfile.phoneNumber) {
-        setButtonText(user.sellerProfile.phoneNumber);
+      console.log(user);
+      if (user && product.seller && product.seller.phoneNumber) {
+        setButtonText(product.seller.phoneNumber);
       } else {
         // Handle case where user is not logged in or phone number is not available
         setButtonText("Phone number not available");

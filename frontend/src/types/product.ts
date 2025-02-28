@@ -6,6 +6,7 @@ export interface Seller {
   website: string;
   rating: number;
   numReviews: number;
+  phoneNumber: string;
 }
 
 interface Category {
@@ -52,6 +53,7 @@ export interface Product {
   seller?: {
     id: number;
     companyName: string;
+    phoneNumber: string;
     user: {
       id: number;
       username: string;
