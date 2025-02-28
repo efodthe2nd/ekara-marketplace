@@ -55,7 +55,7 @@ export default function Home() {
     const shaderMaterial = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uScale: { value: 0.75 },
+        uScale: { value: 1.15 },
         uResolution: { value: new THREE.Vector2(width, height) }
       },
       vertexShader: `
@@ -70,7 +70,10 @@ export default function Home() {
         
         vec2 centerUV(vec2 uv, vec2 resolution) {
           // Perfectly center and scale the coordinates
-          return ((2.0 * uv - resolution) / min(resolution.x, resolution.y)) * uScale;
+          vec2 centered = ((2.0 * uv - resolution) / min(resolution.x, resolution.y));
+          centered.x -= 0.4;
+          centered.y -= 0.3;
+          return centered *uScale;
         }
         
         void main() {
@@ -156,7 +159,7 @@ export default function Home() {
   return (
     <main 
       ref={containerRef}
-      className="relative min-h-screen bg-black text-white overflow-hidden flex flex-col items-center justify-center"
+      className="relative min-h-screen bg-black text-white overflow-hidden flex flex-col items-center mx-auto justify-center"
     >
       {/* THREE.js canvas container */}
       <div 
