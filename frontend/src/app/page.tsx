@@ -175,12 +175,13 @@ export default function Home() {
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
           Quality Spare Parts Marketplace
         </h1>
-        <p className="text-xl md:text-2xl mb-6">
+        <p className="text-xl md:text-2xl mb-9 ">
           Find the exact parts you need at competitive prices
         </p>
+        
         <Link
             href="/dashboard"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            className="bg-blue-500 text-white text-xl md:text-3xl px-4 py-2 rounded-md hover:bg-blue-600 inline-flex items-center justify-center"
           >
             Explore
           </Link>
