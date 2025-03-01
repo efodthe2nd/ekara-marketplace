@@ -24,6 +24,10 @@ export const productRouter = (productController: ProductController): Router => {
         productController.getProductsByManufacturer as RequestHandler
     );
 
+    router.get('/category', 
+        productController.getProductsByCategory as RequestHandler
+    );
+
     // Seller-specific routes
     router.get('/seller/:sellerId', 
         authMiddleware,

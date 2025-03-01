@@ -164,16 +164,10 @@ const DashboardPage = () => {
                 key={category}
                 className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => {
-                  if (category === "Engine Parts") {
-                    router.push("/categories/engine-parts");
-                  }else if (category === 'Computer Accessories') {
-                    router.push('/categories/computer-accessories');
-                  }else if (category === 'Transmission') {
-                    router.push('/categories/transmission');
-                  }else if (category === 'Electronics') {
-                    router.push('/categories/electronics');
-                  }
-                  // Add other category routes as needed
+                  // Convert the category name to a URL-friendly format
+                  const categorySlug = category.toLowerCase().replace(/ /g, '-');
+                  // Navigate to the dynamic route with the category parameter
+                  router.push(`/categoryName?category=${categorySlug}`);
                 }}
               >
                 <Package className="h-8 w-8 text-blue-600 mb-2" />

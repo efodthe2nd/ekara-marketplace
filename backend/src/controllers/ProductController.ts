@@ -223,6 +223,33 @@ export class ProductController {
     }
   };
 
+  public getProductsByCategory = async (req: Request, res: Response): Promise<void> => {
+    console.log('Hit category route with query:', req.query);
+    const { category, page = 1, limit = 10 } = req.query;
+
+    if (!category) {
+      res.status(400).json({ error: 'Category query parameter is required' });
+      return;
+    }
+
+    try {
+      // Use the existing listProducts method which already supports category filtering
+      const result = await this.productService.listProducts(
+        Number(page),
+        Number(limit),
+        {
+          category: category as string,
+        }
+      );
+
+      // Send response
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Error fetching products by category:', error);
+      res.status(500).json({ error: 'Failed to fetch products' });
+    }
+  };
+
   public getProductsByManufacturer = async (req: Request, res: Response): Promise<void> => {
     console.log('Hit manufacturer route with query:', req.query);
     const { manufacturer, page = 1, limit = 10 } = req.query;
