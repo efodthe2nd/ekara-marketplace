@@ -4,7 +4,7 @@ A full-stack e-commerce platform for trading with bidding capabilities, product 
 
 ## 📋 Overview
 
-This marketplace application provides a complete solution for buying and selling spare parts. It features user authentication, product listings with categories, a bidding system, order management, and user reviews.
+This marketplace application provides a complete solution for buying and selling commodities, spareparts and building materials. It features user authentication, product listings with categories, a bidding system, order management, and user reviews.
 
 ## 🛠️ Tech Stack
 
