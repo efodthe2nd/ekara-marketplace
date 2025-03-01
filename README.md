@@ -1,6 +1,6 @@
 # Spare Parts Marketplace
 
-A full-stack e-commerce platform for trading vehicle spare parts with bidding capabilities, product listings, user profiles, and more.
+A full-stack e-commerce platform for trading spare parts with bidding capabilities, product listings, user profiles, and more.
 
 ## 📋 Overview
 
