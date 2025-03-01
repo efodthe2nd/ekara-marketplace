@@ -1,4 +1,4 @@
-# Spare Parts Marketplace
+# Ekara Marketplace
 
 A full-stack e-commerce platform for trading with bidding capabilities, product listings, user profiles, and more.
 
