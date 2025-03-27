@@ -461,14 +461,16 @@ const RegisterForm = () => {
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{" "}
-            <a href="/auth/login" className="text-blue-600 hover:underline">
+            <Link href="/auth/login" className="text-blue-600 hover:underline">
               Log in
-            </a>
+            </Link>
           </p>
         </div>
       </div>
     </div>
   );
 };
+
+import Link from "next/link";
 
 export default RegisterForm;

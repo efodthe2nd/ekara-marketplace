@@ -4,6 +4,7 @@ import * as jwt from "jsonwebtoken";
 import { User } from "../entities/User";
 import { BuyerProfile } from "../entities/Buyer";
 import { SellerProfile } from "../entities/SellerProfile";
+import * as crypto from "crypto";
 import {
   CreateUserDto,
   LoginUserDto,
@@ -26,11 +27,11 @@ export class UserService {
 
     // Check if user exists
     const existingUser = await this.userRepository.findOne({
-        where: [{ email }, { username }],
+      where: [{ email }, { username }],
     });
 
     if (existingUser) {
-        throw new Error("User with this email or username already exists");
+      throw new Error("User with this email or username already exists");
     }
 
     // Hash password
@@ -38,36 +39,36 @@ export class UserService {
 
     // Create user
     const user = this.userRepository.create({
-        email,
-        username,
-        password: hashedPassword,
-        isBuyer: true, // Ensure all users are marked as buyers
-        isSeller: role === "seller",
+      email,
+      username,
+      password: hashedPassword,
+      isBuyer: true, // Ensure all users are marked as buyers
+      isSeller: role === "seller",
     });
 
     await this.userRepository.save(user);
 
     // Create Buyer Profile for every new user
     const buyerProfile = this.buyerProfileRepository.create({
-        user,
-        firstName: user.username,
-        lastName: '',
-        address: 'N/A',
+      user,
+      firstName: user.username,
+      lastName: "",
+      address: "N/A",
     });
 
     await this.buyerProfileRepository.save(buyerProfile);
 
     // Create Seller Profile only if role is 'seller'
     if (role === "seller") {
-        const sellerProfile = this.sellerProfileRepository.create({
-            user,
-            ...profileData,
-        });
-        await this.sellerProfileRepository.save(sellerProfile);
+      const sellerProfile = this.sellerProfileRepository.create({
+        user,
+        ...profileData,
+      });
+      await this.sellerProfileRepository.save(sellerProfile);
     }
 
     return this.getUserById(user.id);
-}
+  }
 
   async validateUser(loginUserDto: LoginUserDto): Promise<User> {
     const { email, password } = loginUserDto;
@@ -165,60 +166,87 @@ export class UserService {
 
   async getUserById(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
-        where: { id },
-        relations: ['buyerProfile', 'sellerProfile'], // Ensure buyerProfile is included
+      where: { id },
+      relations: ["buyerProfile", "sellerProfile"], // Ensure buyerProfile is included
     });
 
     if (!user) {
-        throw new Error("User not found");
+      throw new Error("User not found");
     }
 
     return user;
-}
+  }
 
   // Add this method to UserService class
   // UserService.ts
-async createSellerProfile(userId: number, profileData: CreateSellerProfileDto): Promise<SellerProfile> {
-  const user = await this.userRepository.findOne({
+  async createSellerProfile(
+    userId: number,
+    profileData: CreateSellerProfileDto
+  ): Promise<SellerProfile> {
+    const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['sellerProfile']
-  });
+      relations: ["sellerProfile"],
+    });
 
-  if (!user) {
-      throw new Error('User not found');
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.sellerProfile) {
+      throw new Error("User already has a seller profile");
+    }
+
+    // Create new seller profile
+    const sellerProfile = new SellerProfile();
+    sellerProfile.user = user;
+    sellerProfile.userId = user.id;
+    sellerProfile.companyName = profileData.companyName;
+    sellerProfile.companyDescription = profileData.companyDescription || "";
+    sellerProfile.phoneNumber = profileData.phoneNumber || "";
+
+    // Save seller profile
+    const savedProfile = await this.sellerProfileRepository.save(sellerProfile);
+
+    // Update user's isSeller status
+    user.isSeller = true;
+    user.sellerProfile = savedProfile;
+    await this.userRepository.save(user);
+
+    const foundProfile = await this.sellerProfileRepository.findOne({
+      where: { id: savedProfile.id },
+      relations: ["user"],
+    });
+
+    if (!foundProfile) {
+      throw new Error("Seller profile not found");
+    }
+
+    return foundProfile;
   }
 
-  if (user.sellerProfile) {
-      throw new Error('User already has a seller profile');
+  generateVerificationToken(): string {
+    // Generate a random token
+    return crypto.randomBytes(32).toString("hex");
   }
 
-  // Create new seller profile
-  const sellerProfile = new SellerProfile();
-  sellerProfile.user = user;
-  sellerProfile.userId = user.id;
-  sellerProfile.companyName = profileData.companyName;
-  sellerProfile.companyDescription = profileData.companyDescription || '';
-  sellerProfile.phoneNumber = profileData.phoneNumber || '';
+  async saveVerificationToken(userId: number, token: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      verificationToken: token,
+      verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    });
+  }
 
-  // Save seller profile
-  const savedProfile = await this.sellerProfileRepository.save(sellerProfile);
+  async findByVerificationToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { verificationToken: token } });
+  }
 
-  // Update user's isSeller status
-  user.isSeller = true;
-  user.sellerProfile = savedProfile;
-  await this.userRepository.save(user);
-
-const foundProfile = await this.sellerProfileRepository.findOne({
-  where: { id: savedProfile.id },
-  relations: ['user']
-});
-
-if (!foundProfile) {
-  throw new Error('Seller profile not found');
-}
-
-return foundProfile;
-}
+  async verifyUser(userId: number): Promise<void> {
+    await this.userRepository.update(userId, {
+      isVerified: true,
+      verificationToken: undefined,
+      verificationTokenExpires: undefined,
+    });
+  }
 
   async updateUser(
     userId: number,

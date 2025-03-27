@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
+import { EmailService } from '../services/EmailService';
 import { CreateUserDto, LoginUserDto, UpdateUserDto, CreateSellerProfileDto } from '../dto/user/index';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { SellerProfile } from '../entities/SellerProfile';
@@ -19,13 +20,26 @@ export class UserController {
         try {
             const createUserDto: CreateUserDto = req.body;
             const user = await this.userService.createUser(createUserDto);
+            
+            // Generate email verification token
+            const verificationToken = this.userService.generateVerificationToken();
+            
+            // Save the verification token to the user
+            await this.userService.saveVerificationToken(user.id, verificationToken);
+            
+            // Send verification email
+            const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+            const emailService = new EmailService();
+            await emailService.sendVerificationEmail(user.email, verificationLink);
+            
+            // Generate auth token
             const token = this.userService.generateToken(user);
             
             // Remove password from response
             const { password, ...userWithoutPassword } = user;
-
+    
             res.status(201).json({
-                message: 'User registered successfully',
+                message: 'User registered successfully. Please check your email to verify your account.',
                 user: userWithoutPassword,
                 token
             });
@@ -35,6 +49,37 @@ export class UserController {
             });
         }
     };
+
+    // In your UserController
+verifyEmail = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.query;
+        
+        if (!token) {
+            return res.status(400).json({ message: 'Verification token is required' });
+        }
+        
+        const user = await this.userService.findByVerificationToken(token as string);
+        
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid verification token' });
+        }
+        
+        if (user.verificationTokenExpires < new Date()) {
+            return res.status(400).json({ message: 'Verification token has expired' });
+        }
+        
+        await this.userService.verifyUser(user.id);
+        
+        res.status(200).json({ message: 'Email verified successfully' });
+    } catch (error: any) {
+        res.status(500).json({
+            message: error.message || 'Error verifying email'
+        });
+    }
+};
+
+
 
 
     login = async (req: Request, res: Response) => {

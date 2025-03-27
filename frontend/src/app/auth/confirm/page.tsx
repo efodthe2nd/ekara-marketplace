@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Link } from 'lucide-react';
 
 const ConfirmationPage = () => {  // Make sure it's defined as a function component
   const searchParams = useSearchParams();
@@ -45,12 +46,12 @@ const ConfirmationPage = () => {  // Make sure it's defined as a function compon
           </div>
 
           <div className="space-y-4">
-            <a 
+            <Link 
               href="/auth/login"
               className="block w-full py-3 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
             >
               Go to Login
-            </a>
+            </Link>
             
             <button 
               onClick={() => {
